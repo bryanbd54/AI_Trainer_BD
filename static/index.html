@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude AI Trainer</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- Demo Banner -->
+  <div id="demoBanner" style="display:none;background:#2d2000;border-bottom:1px solid #5a3e00;padding:8px 24px;font-size:0.82rem;color:#fbbf24;text-align:center">
+    ⚠️ <strong>Demo Mode</strong> — scoring is simulated. Add <code style="background:#1a1400;padding:2px 6px;border-radius:4px">ANTHROPIC_API_KEY</code> to enable real Claude evaluation.
+  </div>
+
+  <!-- Nav -->
+  <nav class="nav" id="nav" style="display:none">
+    <span class="nav-logo" id="navLogo">🤖 Claude Trainer</span>
+    <div class="track-switcher">
+      <button class="track-btn active" id="trackBtnClaude" onclick="App.switchTrack('claude')">🤖 Claude</button>
+      <button class="track-btn" id="trackBtnCopilot" onclick="App.switchTrack('copilot')">💼 Copilot</button>
+    </div>
+    <button class="nav-btn" onclick="App.showView('dashboard')">Home</button>
+    <button class="nav-btn" onclick="App.showView('leaderboard')">🏆 Leaderboard</button>
+    <button class="nav-btn" onclick="App.showView('badges')">🎖 Badges</button>
+    <div class="nav-spacer"></div>
+    <div class="nav-user" id="navUser" onclick="App.showView('dashboard')">
+      <span id="navUsername" style="font-weight:600;font-size:0.9rem"></span>
+      <span class="nav-xp-badge" id="navXp">0 XP</span>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="main" id="main">
+
+    <!-- LOGIN VIEW -->
+    <div class="view active" id="view-login">
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-hero">🤖</div>
+          <h1 class="login-title">Claude AI Trainer</h1>
+          <p class="login-subtitle">Master Claude for real PM work. Practice prompts, earn XP, beat your team.</p>
+          <div class="login-features">
+            <div class="login-feature"><strong>🎯 20 Challenges</strong>Jira, Confluence, stakeholder comms & more</div>
+            <div class="login-feature"><strong>⭐ AI Scoring</strong>Claude evaluates your prompt quality</div>
+            <div class="login-feature"><strong>🏆 Leaderboard</strong>Compete with your team</div>
+            <div class="login-feature"><strong>🎖 12 Badges</strong>Unlock achievements as you improve</div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="usernameInput" placeholder="Enter your name to start" maxlength="30"
+              onkeydown="if(event.key==='Enter')App.login()" />
+            <button class="btn btn-primary" onclick="App.login()">Play →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div class="view" id="view-dashboard">
+      <div class="dashboard-header">
+        <div class="dashboard-welcome">
+          <h1 id="dashWelcome">Welcome back!</h1>
+          <p id="dashSubtitle">Pick a challenge and start prompting.</p>
+        </div>
+        <div class="level-card" id="levelCard">
+          <div class="level-badge">
+            <div class="level-icon" id="levelIcon">1</div>
+            <div class="level-info">
+              <strong id="levelName">AI Apprentice</strong>
+              <span id="levelXp">0 XP</span>
+            </div>
+          </div>
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+            <div class="xp-label" id="xpLabel">200 XP to next level</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number" id="statXp">0</div><div class="stat-label">Total XP</div></div>
+        <div class="stat-card"><div class="stat-number" id="statCompleted">0</div><div class="stat-label">Completed</div></div>
+        <div class="stat-card"><div class="stat-number" id="statBadges">0</div><div class="stat-label">Badges</div></div>
+        <div class="stat-card"><div class="stat-number" id="statAvg">—</div><div class="stat-label">Avg Score</div></div>
+      </div>
+
+      <div id="challengeCategories"></div>
+    </div>
+
+    <!-- CHALLENGE DETAIL VIEW -->
+    <div class="view" id="view-challenge">
+      <div class="challenge-back">
+        <button class="btn btn-secondary btn-sm" onclick="App.showView('dashboard')">← Back to Challenges</button>
+      </div>
+
+      <div class="challenge-hero">
+        <div class="challenge-meta">
+          <span class="meta-tag" id="detailCategory"></span>
+          <span class="meta-tag" id="detailDifficulty"></span>
+          <span class="meta-tag">⭐ <span id="detailXp"></span> XP base reward</span>
+        </div>
+        <h1 id="detailTitle">Challenge Title</h1>
+        <div class="scenario-box">
+          <div class="scenario-label">📋 Your Scenario</div>
+          <div id="detailScenario"></div>
+        </div>
+        <div class="context-box">
+          <div class="context-label">ℹ️ Context</div>
+          <div id="detailContext"></div>
+        </div>
+      </div>
+
+      <div class="tips-section">
+        <h3>💡 What makes a great prompt here?</h3>
+        <ul class="tips-list" id="tipsList"></ul>
+      </div>
+
+      <div class="prompt-section">
+        <h3 id="promptSectionTitle">✍️ Write your prompt for Claude</h3>
+        <p class="prompt-description" id="promptDescription">Write the prompt you'd give Claude to complete this task. The better your prompt, the higher your score. Claude will evaluate both your prompt quality and the output it generates.</p>
+        <textarea class="prompt-textarea" id="promptInput" placeholder="Write your prompt here...
+Try to: give Claude a role, provide context, specify the exact format you need..."
+          oninput="App.updateCharCount()"></textarea>
+        <div class="prompt-actions">
+          <button class="btn btn-primary btn-lg" id="submitBtn" onclick="App.submitChallenge()">
+            🚀 Submit for Scoring
+          </button>
+          <button class="btn btn-secondary" id="revealBtn" onclick="App.revealModelPrompt()">
+            👁 Reveal Model Prompt
+          </button>
+          <span class="char-count" id="charCount">0 characters</span>
+        </div>
+        <div class="model-prompt-reveal" id="modelPromptReveal">
+          <h4>🏆 Gold Standard Prompt</h4>
+          <p id="modelPromptText"></p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="result-section" id="resultSection">
+        <div class="score-display" id="scoreDisplay">
+          <div class="score-circle">
+            <span class="score-number" id="resultScore">-</span>
+            <span class="score-label">/100</span>
+          </div>
+          <div class="score-details">
+            <div class="score-title" id="scoreTitle">-</div>
+            <div class="score-subtitle" id="scoreSubtitle">-</div>
+            <div class="xp-earned-tag">+<span id="xpEarned">0</span> XP earned</div>
+          </div>
+        </div>
+
+        <div class="score-breakdown" id="scoreBreakdown">
+          <div class="breakdown-item">
+            <div class="breakdown-score" id="bClarity">-</div>
+            <div class="breakdown-max">/25</div>
+            <div class="breakdown-label" id="bClarityLabel">Clarity</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-score" id="bContext">-</div>
+            <div class="breakdown-max">/25</div>
+            <div class="breakdown-label" id="bContextLabel">Context</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-score" id="bStructure">-</div>
+            <div class="breakdown-max">/25</div>
+            <div class="breakdown-label" id="bStructureLabel">Structure</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-score" id="bOutput">-</div>
+            <div class="breakdown-max">/25</div>
+            <div class="breakdown-label" id="bOutputLabel">Output Quality</div>
+          </div>
+        </div>
+
+        <div class="feedback-block">
+          <h4>📝 Feedback</h4>
+          <p id="feedbackText">-</p>
+        </div>
+        <div class="feedback-block tip">
+          <h4>💡 Pro Tip</h4>
+          <p id="tipText">-</p>
+        </div>
+        <div class="feedback-block">
+          <h4>🔍 vs. Gold Standard</h4>
+          <p id="comparisonText">-</p>
+        </div>
+
+        <div class="response-toggle" onclick="App.toggleResponse()">
+          <h4 id="responseLabel">📄 Claude's Response to Your Prompt</h4>
+          <span class="toggle-chevron" id="toggleChevron">▼</span>
+        </div>
+        <div class="response-content" id="responseContent"></div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="App.submitChallenge()">🔄 Try Again</button>
+          <button class="btn btn-secondary" onclick="App.showView('dashboard')">← More Challenges</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD VIEW -->
+    <div class="view" id="view-leaderboard">
+      <div style="margin-bottom:24px;">
+        <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">🏆 Leaderboard</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem">Top Claude practitioners on your team</p>
+      </div>
+      <div class="leaderboard-table">
+        <div class="lb-row header">
+          <div style="text-align:center">Rank</div>
+          <div>Player</div>
+          <div style="text-align:right">XP</div>
+          <div style="text-align:center">Done</div>
+          <div style="text-align:right">Avg</div>
+        </div>
+        <div id="lbBody"></div>
+      </div>
+    </div>
+
+    <!-- BADGES VIEW -->
+    <div class="view" id="view-badges">
+      <div style="margin-bottom:24px;">
+        <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">🎖 Badges</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem" id="badgesSubtitle">Unlock achievements as you master Claude</p>
+      </div>
+      <div class="badges-grid" id="badgesGrid"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <h3 id="loadingTitle">Claude is evaluating…</h3>
+    <p id="loadingSubtitle">Sending your prompt, generating a response, and scoring your technique.</p>
+  </div>
+</div>
+
+<!-- Badge Toast -->
+<div class="badge-toast" id="badgeToast">
+  <div class="badge-toast-icon" id="toastIcon">🏅</div>
+  <div>
+    <div class="badge-toast-title">Badge Unlocked!</div>
+    <div class="badge-toast-name" id="toastName">-</div>
+    <div class="badge-toast-desc" id="toastDesc">-</div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
