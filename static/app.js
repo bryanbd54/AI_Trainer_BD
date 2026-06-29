@@ -8,7 +8,6 @@ const App = (() => {
     currentChallenge: null,
     modelPromptRevealed: false,
     currentTrack: 'claude',
-    loginMode: 'login',
   };
 
   // ── Track config ──────────────────────────────────────────────────────────
@@ -68,14 +67,6 @@ const App = (() => {
     document.getElementById('usernameInput').focus();
   }
 
-  function switchLoginMode(mode) {
-    state.loginMode = mode;
-    document.getElementById('formLogin').style.display = mode === 'login' ? '' : 'none';
-    document.getElementById('formRegister').style.display = mode === 'register' ? '' : 'none';
-    document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
-    document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
-  }
-
   async function login() {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
@@ -104,14 +95,14 @@ const App = (() => {
     if (!email) { document.getElementById('regEmail').focus(); return; }
     if (!password) { document.getElementById('regPassword').focus(); return; }
     try {
-      const user = await api('/api/register', 'POST', { username, email, password, display_name: displayName || username });
-      state.username = username;
-      state.user = user;
-      localStorage.setItem('ct_username', username);
-      await loadChallenges();
-      showNav();
-      renderDashboard();
-      showView('dashboard');
+      await api('/api/register', 'POST', { username, email, password, display_name: displayName || username });
+      document.getElementById('regDisplayName').value = '';
+      document.getElementById('regUsername').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPassword').value = '';
+      document.getElementById('usernameInput').value = username;
+      showView('login');
+      document.getElementById('passwordInput').focus();
     } catch (e) {
       alert('Registration failed: ' + e.message);
     }
@@ -126,15 +117,9 @@ const App = (() => {
     state.badges = {};
     state.currentChallenge = null;
     state.currentTrack = 'claude';
-    state.loginMode = 'login';
     document.getElementById('nav').style.display = 'none';
     document.getElementById('usernameInput').value = '';
     document.getElementById('passwordInput').value = '';
-    document.getElementById('regDisplayName').value = '';
-    document.getElementById('regUsername').value = '';
-    document.getElementById('regEmail').value = '';
-    document.getElementById('regPassword').value = '';
-    switchLoginMode('login');
     showView('login');
     document.getElementById('usernameInput').focus();
   }
@@ -568,7 +553,6 @@ const App = (() => {
     login,
     logout,
     register,
-    switchLoginMode,
     showView,
     openChallenge,
     submitChallenge,

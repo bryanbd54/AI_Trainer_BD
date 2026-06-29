@@ -243,6 +243,13 @@ body {
 .btn-sm { padding: 6px 14px; font-size: 0.8rem; }
 .btn-lg { padding: 14px 28px; font-size: 1rem; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-ghost {
+  background: none;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  margin-top: 10px;
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--accent); }
 
 /* ── Dashboard ── */
 .dashboard-header {

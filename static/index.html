@@ -48,31 +48,34 @@
             <div class="login-feature"><strong>🏆 Leaderboard</strong>Compete with your team</div>
             <div class="login-feature"><strong>🎖 12 Badges</strong>Unlock achievements as you improve</div>
           </div>
-          <div class="auth-tabs">
-            <button class="auth-tab active" id="tabLogin" onclick="App.switchLoginMode('login')">Sign In</button>
-            <button class="auth-tab" id="tabRegister" onclick="App.switchLoginMode('register')">Create Account</button>
+          <div class="field-group">
+            <input type="text" id="usernameInput" placeholder="Username" maxlength="30"
+              onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
+            <input type="password" id="passwordInput" placeholder="Password"
+              onkeydown="if(event.key==='Enter')App.login()" />
           </div>
+          <button class="btn btn-primary btn-full" onclick="App.login()">Sign In</button>
+          <button class="btn btn-ghost btn-full" onclick="App.showView('register')">Create Account</button>
+        </div>
+      </div>
+    </div>
 
-          <div id="formLogin">
-            <div class="field-group">
-              <input type="text" id="usernameInput" placeholder="Username" maxlength="30"
-                onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
-              <input type="password" id="passwordInput" placeholder="Password"
-                onkeydown="if(event.key==='Enter')App.login()" />
-            </div>
-            <button class="btn btn-primary btn-full" onclick="App.login()">Sign In →</button>
+    <!-- REGISTER VIEW -->
+    <div class="view" id="view-register">
+      <div class="login-container">
+        <div class="login-card">
+          <div class="login-hero">✨</div>
+          <h1 class="login-title">Create Account</h1>
+          <p class="login-subtitle">Join your team, earn XP, and compete on the leaderboard.</p>
+          <div class="field-group">
+            <input type="text" id="regDisplayName" placeholder="Display Name" maxlength="30" />
+            <input type="text" id="regUsername" placeholder="Username" maxlength="30" />
+            <input type="email" id="regEmail" placeholder="Email" />
+            <input type="password" id="regPassword" placeholder="Password (min 6 characters)"
+              onkeydown="if(event.key==='Enter')App.register()" />
           </div>
-
-          <div id="formRegister" style="display:none">
-            <div class="field-group">
-              <input type="text" id="regDisplayName" placeholder="Display Name" maxlength="30" />
-              <input type="text" id="regUsername" placeholder="Username" maxlength="30" />
-              <input type="email" id="regEmail" placeholder="Email" />
-              <input type="password" id="regPassword" placeholder="Password (min 6 characters)"
-                onkeydown="if(event.key==='Enter')App.register()" />
-            </div>
-            <button class="btn btn-primary btn-full" onclick="App.register()">Create Account →</button>
-          </div>
+          <button class="btn btn-primary btn-full" onclick="App.register()">Create Account</button>
+          <button class="btn btn-ghost btn-full" onclick="App.showView('login')">← Back to Sign In</button>
         </div>
       </div>
     </div>
