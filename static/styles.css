@@ -84,6 +84,8 @@ body {
   transition: all var(--transition);
 }
 .nav-btn:hover { border-color: var(--accent); color: var(--text); }
+.nav-btn-signout { border-color: transparent; }
+.nav-btn-signout:hover { border-color: var(--red); color: var(--red); }
 
 .track-switcher {
   display: flex;

@@ -85,6 +85,21 @@ const App = (() => {
     }
   }
 
+  function logout() {
+    localStorage.removeItem('ct_username');
+    state.username = null;
+    state.user = null;
+    state.challenges = [];
+    state.categories = {};
+    state.badges = {};
+    state.currentChallenge = null;
+    state.currentTrack = 'claude';
+    document.getElementById('nav').style.display = 'none';
+    document.getElementById('usernameInput').value = '';
+    showView('login');
+    document.getElementById('usernameInput').focus();
+  }
+
   // ── Track switching ───────────────────────────────────────────────────────
 
   async function switchTrack(track) {
@@ -512,6 +527,7 @@ const App = (() => {
 
   return {
     login,
+    logout,
     showView,
     openChallenge,
     submitChallenge,
