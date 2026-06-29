@@ -1,30 +1,47 @@
-import sqlite3
+import os
 import json
 from datetime import date, datetime
-from pathlib import Path
+from contextlib import contextmanager
 
-DB_PATH = Path(__file__).parent / "aitrainer.db"
+import psycopg2
+import psycopg2.extras
 
 
 def get_conn():
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
     return conn
 
 
+@contextmanager
+def _cursor(conn):
+    """Yield a RealDictCursor and commit/rollback on exit."""
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        yield cur
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        cur.close()
+        conn.close()
+
+
 def init_db():
-    with get_conn() as conn:
-        conn.executescript("""
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 username    TEXT PRIMARY KEY,
                 xp          INTEGER DEFAULT 0,
                 level       INTEGER DEFAULT 1,
-                created_at  TEXT DEFAULT (datetime('now')),
-                last_active TEXT DEFAULT (datetime('now'))
-            );
-
+                created_at  TIMESTAMPTZ DEFAULT NOW(),
+                last_active TIMESTAMPTZ DEFAULT NOW()
+            )
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS submissions (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                id           SERIAL PRIMARY KEY,
                 username     TEXT NOT NULL,
                 challenge_id TEXT NOT NULL,
                 prompt       TEXT NOT NULL,
@@ -32,54 +49,64 @@ def init_db():
                 score        INTEGER NOT NULL,
                 xp_earned    INTEGER NOT NULL,
                 feedback     TEXT,
-                created_at   TEXT DEFAULT (datetime('now')),
+                created_at   TIMESTAMPTZ DEFAULT NOW(),
                 FOREIGN KEY (username) REFERENCES users(username)
-            );
-
+            )
+        """)
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS user_badges (
-                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                id         SERIAL PRIMARY KEY,
                 username   TEXT NOT NULL,
                 badge_id   TEXT NOT NULL,
-                earned_at  TEXT DEFAULT (datetime('now')),
+                earned_at  TIMESTAMPTZ DEFAULT NOW(),
                 UNIQUE(username, badge_id),
                 FOREIGN KEY (username) REFERENCES users(username)
-            );
+            )
         """)
 
 
 def get_or_create_user(username: str) -> dict:
-    with get_conn() as conn:
-        conn.execute("""
-            INSERT OR IGNORE INTO users (username) VALUES (?)
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("""
+            INSERT INTO users (username) VALUES (%s)
+            ON CONFLICT (username) DO NOTHING
         """, (username,))
-        conn.execute("""
-            UPDATE users SET last_active = datetime('now') WHERE username = ?
+        cur.execute("""
+            UPDATE users SET last_active = NOW() WHERE username = %s
         """, (username,))
-        row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
-        badges = conn.execute(
-            "SELECT badge_id, earned_at FROM user_badges WHERE username = ?", (username,)
-        ).fetchall()
-        completions = conn.execute("""
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        row = cur.fetchone()
+        cur.execute(
+            "SELECT badge_id, earned_at FROM user_badges WHERE username = %s", (username,)
+        )
+        badges = cur.fetchall()
+        cur.execute("""
             SELECT challenge_id, MAX(score) as best_score
-            FROM submissions WHERE username = ?
+            FROM submissions WHERE username = %s
             GROUP BY challenge_id
-        """, (username,)).fetchall()
+        """, (username,))
+        completions = cur.fetchall()
     return _build_user_dict(row, badges, completions)
 
 
 def get_user(username: str) -> dict | None:
-    with get_conn() as conn:
-        row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("SELECT * FROM users WHERE username = %s", (username,))
+        row = cur.fetchone()
         if not row:
             return None
-        badges = conn.execute(
-            "SELECT badge_id, earned_at FROM user_badges WHERE username = ?", (username,)
-        ).fetchall()
-        completions = conn.execute("""
+        cur.execute(
+            "SELECT badge_id, earned_at FROM user_badges WHERE username = %s", (username,)
+        )
+        badges = cur.fetchall()
+        cur.execute("""
             SELECT challenge_id, MAX(score) as best_score
-            FROM submissions WHERE username = ?
+            FROM submissions WHERE username = %s
             GROUP BY challenge_id
-        """, (username,)).fetchall()
+        """, (username,))
+        completions = cur.fetchall()
     return _build_user_dict(row, badges, completions)
 
 
@@ -104,73 +131,83 @@ def _build_user_dict(row, badges, completions) -> dict:
         "progress_pct": progress_pct,
         "created_at": row["created_at"],
         "last_active": row["last_active"],
-        "badges": [{"badge_id": b["badge_id"], "earned_at": b["earned_at"]} for b in badges],
+        "badges": [{"badge_id": b["badge_id"], "earned_at": str(b["earned_at"])} for b in badges],
         "completions": {c["challenge_id"]: c["best_score"] for c in completions},
     }
 
 
 def add_xp(username: str, xp: int):
     from challenges import get_level
-    with get_conn() as conn:
-        conn.execute("UPDATE users SET xp = xp + ? WHERE username = ?", (xp, username))
-        new_xp = conn.execute("SELECT xp FROM users WHERE username = ?", (username,)).fetchone()["xp"]
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("UPDATE users SET xp = xp + %s WHERE username = %s", (xp, username))
+        cur.execute("SELECT xp FROM users WHERE username = %s", (username,))
+        new_xp = cur.fetchone()["xp"]
         new_level = get_level(new_xp)["level"]
-        conn.execute("UPDATE users SET level = ? WHERE username = ?", (new_level, username))
+        cur.execute("UPDATE users SET level = %s WHERE username = %s", (new_level, username))
 
 
 def add_submission(username: str, challenge_id: str, prompt: str,
                    response: str, score: int, xp_earned: int, feedback: str) -> int:
-    with get_conn() as conn:
-        cur = conn.execute("""
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("""
             INSERT INTO submissions (username, challenge_id, prompt, response, score, xp_earned, feedback)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
         """, (username, challenge_id, prompt, response, score, xp_earned, feedback))
-        return cur.lastrowid
+        return cur.fetchone()["id"]
 
 
 def check_and_award_badges(username: str) -> list[str]:
     from challenges import BADGES, CHALLENGES
     from copilot_challenges import COPILOT_CHALLENGES, COPILOT_BADGES
-    with get_conn() as conn:
-        existing = {r["badge_id"] for r in conn.execute(
-            "SELECT badge_id FROM user_badges WHERE username = ?", (username,)
-        ).fetchall()}
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute(
+            "SELECT badge_id FROM user_badges WHERE username = %s", (username,)
+        )
+        existing = {r["badge_id"] for r in cur.fetchall()}
 
-        completions = {r["challenge_id"]: r["best_score"] for r in conn.execute("""
+        cur.execute("""
             SELECT challenge_id, MAX(score) as best_score
-            FROM submissions WHERE username = ?
+            FROM submissions WHERE username = %s
             GROUP BY challenge_id
-        """, (username,)).fetchall()}
+        """, (username,))
+        completions = {r["challenge_id"]: r["best_score"] for r in cur.fetchall()}
 
-        today_count = conn.execute("""
+        cur.execute("""
             SELECT COUNT(DISTINCT challenge_id) as cnt
             FROM submissions
-            WHERE username = ? AND date(created_at) = date('now')
-        """, (username,)).fetchone()["cnt"]
+            WHERE username = %s AND created_at::date = CURRENT_DATE
+        """, (username,))
+        today_count = cur.fetchone()["cnt"]
 
-        high_scores = conn.execute("""
+        cur.execute("""
             SELECT COUNT(DISTINCT challenge_id) as cnt
             FROM (
                 SELECT challenge_id, MAX(score) as best
-                FROM submissions WHERE username = ?
+                FROM submissions WHERE username = %s
                 GROUP BY challenge_id
-                HAVING best >= 80
-            )
-        """, (username,)).fetchone()["cnt"]
+                HAVING MAX(score) >= 80
+            ) sub
+        """, (username,))
+        high_scores = cur.fetchone()["cnt"]
 
     new_badges = []
 
     def award(badge_id: str):
         if badge_id not in existing:
-            with get_conn() as conn:
+            conn2 = get_conn()
+            with _cursor(conn2) as cur2:
                 try:
-                    conn.execute(
-                        "INSERT INTO user_badges (username, badge_id) VALUES (?, ?)",
+                    cur2.execute(
+                        "INSERT INTO user_badges (username, badge_id) VALUES (%s, %s)",
                         (username, badge_id)
                     )
                     new_badges.append(badge_id)
                     existing.add(badge_id)
-                except sqlite3.IntegrityError:
+                except psycopg2.errors.UniqueViolation:
                     pass
 
     if completions:
@@ -245,8 +282,9 @@ def check_and_award_badges(username: str) -> list[str]:
 
 def get_leaderboard(limit: int = 10) -> list[dict]:
     from challenges import get_level
-    with get_conn() as conn:
-        rows = conn.execute("""
+    conn = get_conn()
+    with _cursor(conn) as cur:
+        cur.execute("""
             SELECT u.username, u.xp, u.level,
                    COUNT(DISTINCT s.challenge_id) as challenges_completed,
                    COALESCE(AVG(best.best_score), 0) as avg_score
@@ -259,8 +297,9 @@ def get_leaderboard(limit: int = 10) -> list[dict]:
             LEFT JOIN submissions s ON u.username = s.username
             GROUP BY u.username
             ORDER BY u.xp DESC
-            LIMIT ?
-        """, (limit,)).fetchall()
+            LIMIT %s
+        """, (limit,))
+        rows = cur.fetchall()
     result = []
     for i, r in enumerate(rows):
         level_info = get_level(r["xp"])
@@ -278,15 +317,17 @@ def get_leaderboard(limit: int = 10) -> list[dict]:
 
 
 def get_user_submissions(username: str, challenge_id: str | None = None) -> list[dict]:
-    with get_conn() as conn:
+    conn = get_conn()
+    with _cursor(conn) as cur:
         if challenge_id:
-            rows = conn.execute("""
-                SELECT * FROM submissions WHERE username = ? AND challenge_id = ?
+            cur.execute("""
+                SELECT * FROM submissions WHERE username = %s AND challenge_id = %s
                 ORDER BY created_at DESC LIMIT 5
-            """, (username, challenge_id)).fetchall()
+            """, (username, challenge_id))
         else:
-            rows = conn.execute("""
-                SELECT * FROM submissions WHERE username = ?
+            cur.execute("""
+                SELECT * FROM submissions WHERE username = %s
                 ORDER BY created_at DESC LIMIT 20
-            """, (username,)).fetchall()
+            """, (username,))
+        rows = cur.fetchall()
     return [dict(r) for r in rows]
