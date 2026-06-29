@@ -8,6 +8,7 @@ const App = (() => {
     currentChallenge: null,
     modelPromptRevealed: false,
     currentTrack: 'claude',
+    loginMode: 'login',
   };
 
   // ── Track config ──────────────────────────────────────────────────────────
@@ -67,12 +68,21 @@ const App = (() => {
     document.getElementById('usernameInput').focus();
   }
 
+  function switchLoginMode(mode) {
+    state.loginMode = mode;
+    document.getElementById('formLogin').style.display = mode === 'login' ? '' : 'none';
+    document.getElementById('formRegister').style.display = mode === 'register' ? '' : 'none';
+    document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+  }
+
   async function login() {
-    const input = document.getElementById('usernameInput');
-    const username = input.value.trim();
-    if (!username) { input.focus(); return; }
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    if (!username) { document.getElementById('usernameInput').focus(); return; }
+    if (!password) { document.getElementById('passwordInput').focus(); return; }
     try {
-      const user = await api('/api/users', 'POST', { username });
+      const user = await api('/api/users', 'POST', { username, password });
       state.username = username;
       state.user = user;
       localStorage.setItem('ct_username', username);
@@ -81,7 +91,29 @@ const App = (() => {
       renderDashboard();
       showView('dashboard');
     } catch (e) {
-      alert('Could not log in: ' + e.message);
+      alert('Sign in failed: ' + e.message);
+    }
+  }
+
+  async function register() {
+    const displayName = document.getElementById('regDisplayName').value.trim();
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    if (!username) { document.getElementById('regUsername').focus(); return; }
+    if (!email) { document.getElementById('regEmail').focus(); return; }
+    if (!password) { document.getElementById('regPassword').focus(); return; }
+    try {
+      const user = await api('/api/register', 'POST', { username, email, password, display_name: displayName || username });
+      state.username = username;
+      state.user = user;
+      localStorage.setItem('ct_username', username);
+      await loadChallenges();
+      showNav();
+      renderDashboard();
+      showView('dashboard');
+    } catch (e) {
+      alert('Registration failed: ' + e.message);
     }
   }
 
@@ -94,8 +126,15 @@ const App = (() => {
     state.badges = {};
     state.currentChallenge = null;
     state.currentTrack = 'claude';
+    state.loginMode = 'login';
     document.getElementById('nav').style.display = 'none';
     document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('regDisplayName').value = '';
+    document.getElementById('regUsername').value = '';
+    document.getElementById('regEmail').value = '';
+    document.getElementById('regPassword').value = '';
+    switchLoginMode('login');
     showView('login');
     document.getElementById('usernameInput').focus();
   }
@@ -170,7 +209,7 @@ const App = (() => {
 
   function updateNav() {
     if (!state.user) return;
-    document.getElementById('navUsername').textContent = state.user.username;
+    document.getElementById('navUsername').textContent = state.user.display_name || state.user.username;
     document.getElementById('navXp').textContent = state.user.xp + ' XP';
   }
 
@@ -180,7 +219,7 @@ const App = (() => {
     if (!state.user) return;
     const u = state.user;
 
-    document.getElementById('dashWelcome').textContent = 'Hey, ' + u.username + '! 👋';
+    document.getElementById('dashWelcome').textContent = 'Hey, ' + (u.display_name || u.username) + '! 👋';
     const comp = Object.keys(u.completions).length;
     const total = state.challenges.length;
     document.getElementById('dashSubtitle').textContent =
@@ -528,6 +567,8 @@ const App = (() => {
   return {
     login,
     logout,
+    register,
+    switchLoginMode,
     showView,
     openChallenge,
     submitChallenge,

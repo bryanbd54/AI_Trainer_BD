@@ -48,10 +48,30 @@
             <div class="login-feature"><strong>🏆 Leaderboard</strong>Compete with your team</div>
             <div class="login-feature"><strong>🎖 12 Badges</strong>Unlock achievements as you improve</div>
           </div>
-          <div class="input-group">
-            <input type="text" id="usernameInput" placeholder="Enter your name to start" maxlength="30"
-              onkeydown="if(event.key==='Enter')App.login()" />
-            <button class="btn btn-primary" onclick="App.login()">Play →</button>
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tabLogin" onclick="App.switchLoginMode('login')">Sign In</button>
+            <button class="auth-tab" id="tabRegister" onclick="App.switchLoginMode('register')">Create Account</button>
+          </div>
+
+          <div id="formLogin">
+            <div class="field-group">
+              <input type="text" id="usernameInput" placeholder="Username" maxlength="30"
+                onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
+              <input type="password" id="passwordInput" placeholder="Password"
+                onkeydown="if(event.key==='Enter')App.login()" />
+            </div>
+            <button class="btn btn-primary btn-full" onclick="App.login()">Sign In →</button>
+          </div>
+
+          <div id="formRegister" style="display:none">
+            <div class="field-group">
+              <input type="text" id="regDisplayName" placeholder="Display Name" maxlength="30" />
+              <input type="text" id="regUsername" placeholder="Username" maxlength="30" />
+              <input type="email" id="regEmail" placeholder="Email" />
+              <input type="password" id="regPassword" placeholder="Password (min 6 characters)"
+                onkeydown="if(event.key==='Enter')App.register()" />
+            </div>
+            <button class="btn btn-primary btn-full" onclick="App.register()">Create Account →</button>
           </div>
         </div>
       </div>

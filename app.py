@@ -23,6 +23,13 @@ app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 class UserCreate(BaseModel):
     username: str
+    password: str
+
+class UserRegister(BaseModel):
+    username: str
+    email: str
+    password: str
+    display_name: str | None = None
 
 class SubmissionCreate(BaseModel):
     username: str
@@ -37,12 +44,33 @@ async def root():
         return f.read()
 
 
-@app.post("/api/users")
-async def create_or_login_user(user: UserCreate):
+@app.post("/api/register", status_code=201)
+async def register_user(user: UserRegister):
     username = user.username.strip()
+    email = user.email.strip().lower()
     if not username or len(username) > 30:
         raise HTTPException(400, "Username must be 1-30 characters")
-    return db.get_or_create_user(username)
+    if not email or "@" not in email:
+        raise HTTPException(400, "Valid email required")
+    if not user.password or len(user.password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+    try:
+        return db.create_user(username, email, user.password, user.display_name)
+    except Exception as e:
+        if "unique" in str(e).lower() or "duplicate" in str(e).lower():
+            raise HTTPException(409, "Username or email already taken")
+        raise HTTPException(500, "Could not create account")
+
+
+@app.post("/api/users")
+async def login_user(user: UserCreate):
+    username = user.username.strip()
+    if not username:
+        raise HTTPException(400, "Username required")
+    result = db.authenticate_user(username, user.password)
+    if not result:
+        raise HTTPException(401, "Invalid username or password")
+    return result
 
 
 @app.get("/api/users/{username}")
@@ -86,7 +114,8 @@ async def submit_challenge(challenge_id: str, submission: SubmissionCreate):
     if not username:
         raise HTTPException(400, "Username required")
 
-    db.get_or_create_user(username)
+    if not db.get_user(username):
+        raise HTTPException(404, "User not found")
 
     # Evaluate the submission
     result = await evaluate_submission(challenge, submission.prompt)
