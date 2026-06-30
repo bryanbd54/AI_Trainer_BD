@@ -15,18 +15,12 @@ def init_db():
     pass  # schema lives in Railway — see postgres railway.session.sql
 
 
-def _safe_password(password: str) -> str:
-    """Truncate to 72 bytes — bcrypt 5.x hard limit."""
-    encoded = password.encode("utf-8")
-    return encoded[:72].decode("utf-8", errors="ignore")
-
-
 def hash_password(password: str) -> str:
-    return pwd_context.hash(_safe_password(password))
+    return pwd_context.hash(password.encode("utf-8")[:72])
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(_safe_password(plain), hashed)
+    return pwd_context.verify(plain.encode("utf-8")[:72], hashed)
 
 
 def create_user(username: str, email: str, password: str, display_name: str | None = None) -> dict:
