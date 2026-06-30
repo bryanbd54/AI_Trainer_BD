@@ -509,10 +509,25 @@ const App = (() => {
 
     document.getElementById('resultSection').classList.add('visible');
     document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Switch to edit mode: hide Submit, show Resubmit, update section label
+    const submitBtn = document.getElementById('submitBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    const titleEl = document.getElementById('promptSectionTitle');
+    const descEl = document.getElementById('promptDescription');
+    if (submitBtn) submitBtn.style.display = 'none';
+    if (retryBtn) retryBtn.style.display = '';
+    if (titleEl) titleEl.textContent = '✏️ Edit your prompt and try again';
+    if (descEl) descEl.textContent = 'Update your prompt above and click Resubmit to improve your score.';
   }
 
   function hideResults() {
     document.getElementById('resultSection').classList.remove('visible');
+    // Restore submit mode
+    const submitBtn = document.getElementById('submitBtn');
+    const retryBtn = document.getElementById('retryBtn');
+    if (submitBtn) submitBtn.style.display = '';
+    if (retryBtn) retryBtn.style.display = 'none';
   }
 
   function toggleResponse() {

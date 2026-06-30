@@ -173,6 +173,9 @@ Try to: give Claude a role, provide context, specify the exact format you need..
           <button class="btn btn-primary btn-lg" id="submitBtn" onclick="App.submitChallenge()">
             🚀 Submit for Scoring
           </button>
+          <button class="btn btn-secondary btn-lg" id="retryBtn" onclick="App.submitChallenge()" style="display:none">
+            🔄 Resubmit
+          </button>
           <span class="char-count" id="charCount">0 characters</span>
         </div>
       </div>
@@ -233,9 +236,9 @@ Try to: give Claude a role, provide context, specify the exact format you need..
         </div>
         <div class="response-content" id="responseContent"></div>
 
-        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
-          <button class="btn btn-primary" onclick="App.submitChallenge()">🔄 Try Again</button>
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
           <button class="btn btn-secondary" onclick="App.showView('dashboard')">← More Challenges</button>
+          <span style="font-size:0.83rem;color:var(--text-muted)">or scroll up to edit your prompt and resubmit</span>
         </div>
       </div>
     </div>
