@@ -716,21 +716,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-}
-.thinking-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
 }
 .thinking-word {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--accent2);
-  min-width: 120px;
-  text-align: left;
+  text-align: center;
   animation: thinkFade 2s ease infinite;
 }
 @keyframes thinkFade {
