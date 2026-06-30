@@ -16,7 +16,10 @@
 
   <!-- Nav -->
   <nav class="nav" id="nav" style="display:none">
-    <span class="nav-logo" id="navLogo">🤖 Claude Trainer</span>
+    <span class="nav-logo" id="navLogo">
+      <span class="nav-logo-mark">GET</span>
+      <span class="nav-logo-mark-text">AI Trainer</span>
+    </span>
     <div class="track-switcher">
       <button class="track-btn active" id="trackBtnClaude" onclick="App.switchTrack('claude')">🤖 Claude</button>
       <button class="track-btn" id="trackBtnCopilot" onclick="App.switchTrack('copilot')">💼 Copilot</button>
@@ -162,14 +165,7 @@ Try to: give Claude a role, provide context, specify the exact format you need..
           <button class="btn btn-primary btn-lg" id="submitBtn" onclick="App.submitChallenge()">
             🚀 Submit for Scoring
           </button>
-          <button class="btn btn-secondary" id="revealBtn" onclick="App.revealModelPrompt()">
-            👁 Reveal Model Prompt
-          </button>
           <span class="char-count" id="charCount">0 characters</span>
-        </div>
-        <div class="model-prompt-reveal" id="modelPromptReveal">
-          <h4>🏆 Gold Standard Prompt</h4>
-          <p id="modelPromptText"></p>
         </div>
       </div>
 

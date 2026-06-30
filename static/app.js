@@ -6,7 +6,6 @@ const App = (() => {
     categories: {},
     badges: {},
     currentChallenge: null,
-    modelPromptRevealed: false,
     currentTrack: 'claude',
   };
 
@@ -325,8 +324,6 @@ const App = (() => {
     } catch (_) {}
 
     state.currentChallenge = challenge;
-    state.modelPromptRevealed = false;
-
     document.getElementById('detailCategory').textContent = challenge.category_label;
     document.getElementById('detailDifficulty').textContent = challenge.difficulty;
     document.getElementById('detailXp').textContent = challenge.xp_reward;
@@ -344,8 +341,6 @@ const App = (() => {
 
     document.getElementById('promptInput').value = '';
     document.getElementById('charCount').textContent = '0 characters';
-    document.getElementById('revealBtn').textContent = '👁 Reveal Model Prompt';
-    document.getElementById('modelPromptReveal').classList.remove('visible');
     hideResults();
 
     // Apply track-specific UI for the challenge view
@@ -358,16 +353,6 @@ const App = (() => {
   function updateCharCount() {
     const len = document.getElementById('promptInput').value.length;
     document.getElementById('charCount').textContent = len + ' characters';
-  }
-
-  function revealModelPrompt() {
-    const c = state.currentChallenge;
-    if (!c) return;
-    state.modelPromptRevealed = true;
-    document.getElementById('modelPromptText').textContent = c.model_prompt || '';
-    document.getElementById('modelPromptReveal').classList.add('visible');
-    document.getElementById('revealBtn').textContent = '✓ Model Prompt Revealed';
-    document.getElementById('revealBtn').disabled = true;
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -603,7 +588,6 @@ const App = (() => {
     showView,
     openChallenge,
     submitChallenge,
-    revealModelPrompt,
     updateCharCount,
     toggleResponse,
     switchTrack,
