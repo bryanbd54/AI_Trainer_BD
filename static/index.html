@@ -150,9 +150,15 @@
         </div>
       </div>
 
-      <div class="tips-section">
-        <h3>💡 What makes a great prompt here?</h3>
-        <ul class="tips-list" id="tipsList"></ul>
+      <div class="hints-section" id="hintsSection">
+        <div class="hints-header">
+          <span class="hints-label">💡 Hints</span>
+          <button class="btn btn-sm btn-ghost" id="hintBtn" onclick="App.revealHint()">
+            Reveal a hint <span class="hint-cost">(-8 XP)</span>
+          </button>
+        </div>
+        <ul class="tips-list" id="hintsList"></ul>
+        <p class="hints-used-note" id="hintsNote" style="display:none"></p>
       </div>
 
       <div class="prompt-section">

@@ -34,6 +34,7 @@ class UserRegister(BaseModel):
 class SubmissionCreate(BaseModel):
     username: str
     prompt: str
+    hints_used: int = 0
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -126,9 +127,9 @@ async def submit_challenge(challenge_id: str, submission: SubmissionCreate):
     result = await evaluate_submission(challenge, submission.prompt)
     score = result["score"]
 
-    # Calculate XP
+    # Calculate XP (apply hint penalty: -8 XP per hint used)
     from challenges import get_xp_reward
-    xp_earned = get_xp_reward(score, challenge["xp_reward"])
+    xp_earned = max(0, get_xp_reward(score, challenge["xp_reward"]) - submission.hints_used * 8)
 
     # Save submission
     db.add_submission(
@@ -203,7 +204,7 @@ def _serialize_challenge(c: dict, full: bool = False) -> dict:
         base.update({
             "context": c["context"],
             "what_makes_a_great_prompt": c["what_makes_a_great_prompt"],
-            "model_prompt": c["model_prompt"],
+            # model_prompt excluded — used server-side only
         })
     return base
 

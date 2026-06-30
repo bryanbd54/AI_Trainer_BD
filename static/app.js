@@ -7,6 +7,8 @@ const App = (() => {
     badges: {},
     currentChallenge: null,
     currentTrack: 'claude',
+    challengeTips: [],
+    hintsUsed: 0,
   };
 
   // ── Claude thinking words (106) ───────────────────────────────────────────
@@ -362,6 +364,9 @@ const App = (() => {
     } catch (_) {}
 
     state.currentChallenge = challenge;
+    state.challengeTips = challenge.what_makes_a_great_prompt || [];
+    state.hintsUsed = 0;
+
     document.getElementById('detailCategory').textContent = challenge.category_label;
     document.getElementById('detailDifficulty').textContent = challenge.difficulty;
     document.getElementById('detailXp').textContent = challenge.xp_reward;
@@ -369,13 +374,12 @@ const App = (() => {
     document.getElementById('detailScenario').textContent = challenge.scenario;
     document.getElementById('detailContext').textContent = challenge.context || '';
 
-    const tipsList = document.getElementById('tipsList');
-    tipsList.innerHTML = '';
-    for (const tip of (challenge.what_makes_a_great_prompt || [])) {
-      const li = document.createElement('li');
-      li.textContent = tip;
-      tipsList.appendChild(li);
-    }
+    document.getElementById('hintsList').innerHTML = '';
+    document.getElementById('hintsNote').style.display = 'none';
+    document.getElementById('hintsNote').textContent = '';
+    const hintBtn = document.getElementById('hintBtn');
+    hintBtn.style.display = '';
+    hintBtn.disabled = false;
 
     document.getElementById('promptInput').value = '';
     document.getElementById('charCount').textContent = '0 characters';
@@ -391,6 +395,26 @@ const App = (() => {
   function updateCharCount() {
     const len = document.getElementById('promptInput').value.length;
     document.getElementById('charCount').textContent = len + ' characters';
+  }
+
+  function revealHint() {
+    const tips = state.challengeTips;
+    if (state.hintsUsed >= tips.length) return;
+
+    const li = document.createElement('li');
+    li.textContent = tips[state.hintsUsed];
+    document.getElementById('hintsList').appendChild(li);
+    state.hintsUsed++;
+
+    const penalty = state.hintsUsed * 8;
+    const note = document.getElementById('hintsNote');
+    note.style.display = 'block';
+    note.textContent = state.hintsUsed + ' hint' + (state.hintsUsed > 1 ? 's' : '') +
+      ' used — max XP reduced by ' + penalty;
+
+    if (state.hintsUsed >= tips.length) {
+      document.getElementById('hintBtn').style.display = 'none';
+    }
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -412,7 +436,7 @@ const App = (() => {
       const result = await api(
         '/api/challenges/' + state.currentChallenge.id + '/submit',
         'POST',
-        { username: state.username, prompt }
+        { username: state.username, prompt, hints_used: state.hintsUsed }
       );
 
       state.user = result.user;
@@ -637,6 +661,7 @@ const App = (() => {
     showView,
     openChallenge,
     submitChallenge,
+    revealHint,
     updateCharCount,
     toggleResponse,
     switchTrack,

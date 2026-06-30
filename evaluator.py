@@ -52,6 +52,13 @@ Your evaluation is grounded in Anthropic's official 2025-2026 prompting best pra
 - Vague instructions that could mean anything
 - No self-check or quality criteria
 
+## Authenticity
+
+If a prompt applies correct techniques mechanically — right structure, role, XML tags — but with
+generic language that could apply to any scenario (no mention of the specific business driver,
+no named stakeholders or constraints from the scenario), reduce Output Quality into the 0-8 range.
+Authentic prompts adapt technique to the specific situation. Note this in your feedback if it applies.
+
 ## Scoring dimensions (0-25 each, total 0-100)
 
 **Clarity (0-25):** How specific and unambiguous are the instructions?
@@ -126,6 +133,13 @@ Your evaluation is grounded in Microsoft's official 4-part prompting framework: 
 - Vague goal: "summarize this" or "write an email about the project"
 - No source: asking Copilot to work from scratch when organizational data exists
 - No format: Copilot will default to a generic layout that may not fit the use case
+
+## Authenticity
+
+If a prompt applies the 4-part framework mechanically — all four labels present but filled with
+generic language that could apply to any scenario — reduce Output Quality into the 0-8 range.
+Authentic prompts reference the specific meeting, file, recipient, or business situation from the
+scenario. Note this in your feedback if it applies.
 
 ## Scoring dimensions (0–25 each; internally use these keys: clarity, context, structure, output_quality)
 
