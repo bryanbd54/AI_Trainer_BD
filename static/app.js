@@ -6,10 +6,12 @@ const App = (() => {
     categories: {},
     badges: {},
     currentChallenge: null,
-    currentTrack: 'claude',
+    currentTrack: 'copilot',
     challengeTips: [],
     hintsUsed: 0,
   };
+
+  let _adminUsers = [];
 
   // ── Claude thinking words (106) ───────────────────────────────────────────
   const THINKING_WORDS = [
@@ -39,7 +41,7 @@ const App = (() => {
     let i = Math.floor(Math.random() * THINKING_WORDS.length);
     el.textContent = THINKING_WORDS[i];
     _thinkInterval = setInterval(() => {
-      i = (i + 1) % THINKING_WORDS.length;
+      i = Math.floor(Math.random() * THINKING_WORDS.length);
       el.textContent = THINKING_WORDS[i];
     }, 2000);
   }
@@ -94,6 +96,7 @@ const App = (() => {
         const user = await api('/api/users/' + encodeURIComponent(saved));
         state.username = saved;
         state.user = user;
+        state.currentTrack = 'copilot';
         await loadChallenges();
         showNav();
         showView('dashboard');
@@ -116,6 +119,7 @@ const App = (() => {
       const user = await api('/api/users', 'POST', { username, password });
       state.username = username;
       state.user = user;
+      state.currentTrack = 'copilot';
       localStorage.setItem('ct_username', username);
       await loadChallenges();
       showNav();
@@ -162,6 +166,7 @@ const App = (() => {
       const user = await api('/api/users', 'POST', { username, password });
       state.username = username;
       state.user = user;
+      state.currentTrack = 'copilot';
       localStorage.setItem('ct_username', username);
       await loadChallenges();
       showNav();
@@ -180,7 +185,7 @@ const App = (() => {
     state.categories = {};
     state.badges = {};
     state.currentChallenge = null;
-    state.currentTrack = 'claude';
+    state.currentTrack = 'copilot';
     document.getElementById('nav').style.display = 'none';
     document.getElementById('usernameInput').value = '';
     document.getElementById('passwordInput').value = '';
@@ -192,6 +197,10 @@ const App = (() => {
 
   async function switchTrack(track) {
     if (state.currentTrack === track) return;
+    if (track === 'claude' && !state.user?.claude_access) {
+      alert('Claude track is locked. Contact your admin to get access.');
+      return;
+    }
     state.currentTrack = track;
     _applyTrackUI();
     await loadChallenges();
@@ -201,7 +210,13 @@ const App = (() => {
   function _applyTrackUI() {
     const cfg = TRACK_CONFIG[state.currentTrack];
     document.getElementById('navLogoText').textContent = cfg.logo;
-    document.getElementById('trackBtnClaude').classList.toggle('active', state.currentTrack === 'claude');
+    const claudeHasAccess = !!state.user?.claude_access;
+    const claudeBtn = document.getElementById('trackBtnClaude');
+    if (claudeBtn) {
+      claudeBtn.classList.toggle('active', state.currentTrack === 'claude');
+      claudeBtn.classList.toggle('locked', !claudeHasAccess);
+      claudeBtn.title = claudeHasAccess ? '' : 'Claude access required — contact your admin';
+    }
     document.getElementById('trackBtnCopilot').classList.toggle('active', state.currentTrack === 'copilot');
     document.getElementById('loadingTitle').textContent = cfg.loadingTitle;
     document.getElementById('loadingSubtitle').textContent = cfg.loadingSubtitle;
@@ -249,6 +264,7 @@ const App = (() => {
     if (name === 'dashboard') renderDashboard();
     else if (name === 'leaderboard') renderLeaderboard();
     else if (name === 'badges') renderBadges();
+    else if (name === 'admin') loadAdminUsers();
   }
 
   // ── Nav ───────────────────────────────────────────────────────────────────
@@ -257,6 +273,8 @@ const App = (() => {
     document.getElementById('nav').style.display = 'flex';
     _applyTrackUI();
     updateNav();
+    const adminBtn = document.getElementById('adminNavBtn');
+    if (adminBtn) adminBtn.style.display = state.user?.is_admin ? '' : 'none';
   }
 
   function updateNav() {
@@ -656,6 +674,81 @@ const App = (() => {
     btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
   }
 
+  // ── Admin ─────────────────────────────────────────────────────────────────
+
+  async function loadAdminUsers() {
+    const body = document.getElementById('adminBody');
+    if (!body) return;
+    if (!state.user?.is_admin) {
+      body.innerHTML = '<div class="empty-state"><div class="empty-icon">🔒</div><h3>Access denied</h3></div>';
+      return;
+    }
+    try {
+      _adminUsers = await api('/api/admin/users?admin=' + encodeURIComponent(state.username));
+      renderAdminUsers(_adminUsers);
+    } catch (e) {
+      body.innerHTML = '<div class="empty-state"><p>Error loading users: ' + e.message + '</p></div>';
+    }
+  }
+
+  function filterAdminUsers() {
+    const q = (document.getElementById('adminSearch')?.value || '').toLowerCase();
+    const filtered = _adminUsers.filter(u =>
+      u.username.toLowerCase().includes(q) ||
+      (u.display_name || '').toLowerCase().includes(q)
+    );
+    renderAdminUsers(filtered);
+  }
+
+  function renderAdminUsers(users) {
+    const body = document.getElementById('adminBody');
+    if (!body) return;
+    body.innerHTML = '';
+    if (!users.length) {
+      body.innerHTML = '<div class="empty-state"><p>No users found.</p></div>';
+      return;
+    }
+    for (const u of users) {
+      const isMe = u.username === state.username;
+      const row = document.createElement('div');
+      row.className = 'admin-row' + (isMe ? ' admin-row-me' : '');
+      row.innerHTML = `
+        <div class="admin-user-cell">
+          <strong>${u.username}</strong>${isMe ? ' <span class="admin-you-tag">(you)</span>' : ''}
+          <span class="admin-display-name">${u.display_name || ''}</span>
+        </div>
+        <div style="text-align:right;font-variant-numeric:tabular-nums">${(u.xp || 0).toLocaleString()}</div>
+        <div style="color:${u.level_color || 'var(--text-muted)'};font-size:0.82rem">${u.level_name || ''}</div>
+        <div style="text-align:center">
+          <button class="admin-toggle ${u.claude_access ? 'admin-toggle-on' : 'admin-toggle-off'}"
+            onclick="App.togglePermission('${u.username}', 'claude_access', ${!u.claude_access})">
+            ${u.claude_access ? 'Yes' : 'No'}
+          </button>
+        </div>
+        <div style="text-align:center">
+          <button class="admin-toggle ${u.is_admin ? 'admin-toggle-on' : 'admin-toggle-off'}"
+            onclick="App.togglePermission('${u.username}', 'is_admin', ${!u.is_admin})">
+            ${u.is_admin ? 'Admin' : 'Operator'}
+          </button>
+        </div>
+      `;
+      body.appendChild(row);
+    }
+  }
+
+  async function togglePermission(targetUsername, field, value) {
+    try {
+      await api(
+        '/api/admin/users/' + encodeURIComponent(targetUsername) + '/permissions?admin=' + encodeURIComponent(state.username),
+        'PUT',
+        { [field]: value }
+      );
+      await loadAdminUsers();
+    } catch (e) {
+      alert('Error updating permissions: ' + e.message);
+    }
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', init);
@@ -672,5 +765,7 @@ const App = (() => {
     toggleResponse,
     switchTrack,
     togglePassword,
+    filterAdminUsers,
+    togglePermission,
   };
 })();

@@ -110,6 +110,8 @@ def _build_user_dict(row: dict, badges, completions) -> dict:
         "progress_pct": progress_pct,
         "created_at": str(row["created_at"]),
         "last_active": str(row["last_active"]),
+        "is_admin": bool(row.get("is_admin", False)),
+        "claude_access": bool(row.get("claude_access", False)),
         "badges": [{"badge_id": b["badge_id"], "earned_at": str(b["earned_at"])} for b in badges],
         "completions": {c["challenge_id"]: c["best_score"] for c in completions},
     }
@@ -340,6 +342,53 @@ def get_leaderboard(limit: int = 15, track: str = "all") -> list[dict]:
             "avg_score": round(float(r["avg_score"] or 0), 1),
         })
     return result
+
+
+def get_all_users() -> list[dict]:
+    from challenges import get_level
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT * FROM users ORDER BY xp DESC")
+                rows = [dict(r) for r in cur.fetchall()]
+    finally:
+        conn.close()
+    result = []
+    for row in rows:
+        level_info = get_level(row["xp"])
+        result.append({
+            "username": row["username"],
+            "display_name": row.get("display_name") or row["username"],
+            "xp": row["xp"],
+            "level": row["level"],
+            "level_name": level_info["name"],
+            "level_color": level_info["color"],
+            "is_admin": bool(row.get("is_admin", False)),
+            "claude_access": bool(row.get("claude_access", False)),
+            "created_at": str(row["created_at"]),
+            "last_active": str(row["last_active"]),
+        })
+    return result
+
+
+def update_user_permissions(username: str, claude_access: bool | None, is_admin: bool | None):
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                if claude_access is not None:
+                    cur.execute(
+                        "UPDATE users SET claude_access = %s WHERE username = %s",
+                        (claude_access, username)
+                    )
+                if is_admin is not None:
+                    cur.execute(
+                        "UPDATE users SET is_admin = %s WHERE username = %s",
+                        (is_admin, username)
+                    )
+    finally:
+        conn.close()
 
 
 def get_user_submissions(username: str, challenge_id: str | None = None) -> list[dict]:

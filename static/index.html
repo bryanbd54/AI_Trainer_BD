@@ -27,6 +27,7 @@
     <button class="nav-btn" onclick="App.showView('dashboard')">Home</button>
     <button class="nav-btn" onclick="App.showView('leaderboard')">🏆 Leaderboard</button>
     <button class="nav-btn" onclick="App.showView('badges')">🎖 Badges</button>
+    <button class="nav-btn nav-btn-admin" id="adminNavBtn" onclick="App.showView('admin')" style="display:none">⚙️ Admin</button>
     <div class="nav-spacer"></div>
     <div class="nav-user" id="navUser" onclick="App.showView('dashboard')">
       <span id="navUsername" style="font-weight:600;font-size:0.9rem"></span>
@@ -253,6 +254,27 @@ Try to: give Claude a role, provide context, specify the exact format you need..
           <div style="text-align:right">Avg</div>
         </div>
         <div id="lbBody"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div class="view" id="view-admin">
+      <div style="margin-bottom:24px;">
+        <h2 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">⚙️ Admin Panel</h2>
+        <p style="color:var(--text-muted);font-size:0.9rem">Manage users and track access permissions</p>
+      </div>
+      <div class="admin-search-bar">
+        <input type="text" id="adminSearch" placeholder="Search by username or display name…" oninput="App.filterAdminUsers()" class="admin-search-input" />
+      </div>
+      <div class="admin-table-wrap">
+        <div class="admin-row admin-header-row">
+          <div>User</div>
+          <div style="text-align:right">XP</div>
+          <div>Level</div>
+          <div style="text-align:center">Claude Access</div>
+          <div style="text-align:center">Role</div>
+        </div>
+        <div id="adminBody"></div>
       </div>
     </div>
 

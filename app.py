@@ -36,6 +36,10 @@ class SubmissionCreate(BaseModel):
     prompt: str
     hints_used: int = 0
 
+class PermissionsUpdate(BaseModel):
+    claude_access: bool | None = None
+    is_admin: bool | None = None
+
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -177,6 +181,26 @@ async def get_history(username: str, challenge_id: str | None = None):
     if not user:
         raise HTTPException(404, "User not found")
     return db.get_user_submissions(username, challenge_id)
+
+
+@app.get("/api/admin/users")
+async def admin_list_users(admin: str = Query(...)):
+    admin_user = db.get_user(admin.strip().lower())
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(403, "Admin access required")
+    return db.get_all_users()
+
+
+@app.put("/api/admin/users/{username}/permissions")
+async def admin_update_permissions(username: str, perms: PermissionsUpdate, admin: str = Query(...)):
+    admin_user = db.get_user(admin.strip().lower())
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(403, "Admin access required")
+    target = db.get_user(username.strip().lower())
+    if not target:
+        raise HTTPException(404, "User not found")
+    db.update_user_permissions(username.strip().lower(), perms.claude_access, perms.is_admin)
+    return db.get_user(username.strip().lower())
 
 
 @app.get("/api/badges")

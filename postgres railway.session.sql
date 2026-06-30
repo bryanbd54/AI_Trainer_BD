@@ -2,12 +2,21 @@
 -- Run this once against your Railway database to initialize all tables.
 
 CREATE TABLE IF NOT EXISTS users (
-    username    TEXT PRIMARY KEY,
-    xp          INTEGER NOT NULL DEFAULT 0,
-    level       INTEGER NOT NULL DEFAULT 1,
-    created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
-    last_active TIMESTAMP NOT NULL DEFAULT NOW()
+    username      TEXT PRIMARY KEY,
+    email         TEXT,
+    password_hash TEXT,
+    display_name  TEXT,
+    xp            INTEGER NOT NULL DEFAULT 0,
+    level         INTEGER NOT NULL DEFAULT 1,
+    is_admin      BOOLEAN NOT NULL DEFAULT FALSE,
+    claude_access BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+    last_active   TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Migration: add admin columns to existing databases
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin      BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS claude_access BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS submissions (
     id           SERIAL PRIMARY KEY,
