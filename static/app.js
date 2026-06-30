@@ -9,6 +9,44 @@ const App = (() => {
     currentTrack: 'claude',
   };
 
+  // ── Claude thinking words (106) ───────────────────────────────────────────
+  const THINKING_WORDS = [
+    'beaming','booping','bouncing','brewing','bubbling','chasing','churning',
+    'coalescing','conjuring','cooking','crafting','crunching','cuddling','dancing',
+    'dazzling','discovering','doodling','dreaming','drifting','enchanting','exploring',
+    'finding','floating','fluttering','foraging','forging','frolicking','gathering',
+    'giggling','gliding','greeting','growing','hatching','herding','honking',
+    'hopping','hugging','humming','imagining','inventing','jingling','juggling',
+    'jumping','kindling','knitting','launching','leaping','mapping','marinating',
+    'meandering','mixing','moseying','munching','napping','nibbling','noodling',
+    'orbiting','painting','percolating','petting','plotting','pondering','popping',
+    'prancing','purring','puzzling','questing','riding','roaming','rolling',
+    'sauteeing','scribbling','seeking','shimmying','singing','skipping','sleeping',
+    'snacking','sniffing','snuggling','soaring','sparking','spinning','splashing',
+    'sprouting','squishing','stargazing','stirring','strolling','swimming','swinging',
+    'tickling','tinkering','toasting','tumbling','twirling','waddling','wandering',
+    'watching','weaving','whistling','wibbling','wiggling','wishing','wobbling',
+    'wondering','yawning','zooming',
+  ];
+
+  let _thinkInterval = null;
+
+  function _startThinkingWords() {
+    const el = document.getElementById('thinkingWord');
+    if (!el) return;
+    let i = Math.floor(Math.random() * THINKING_WORDS.length);
+    el.textContent = THINKING_WORDS[i];
+    _thinkInterval = setInterval(() => {
+      i = (i + 1) % THINKING_WORDS.length;
+      el.textContent = THINKING_WORDS[i];
+    }, 2000);
+  }
+
+  function _stopThinkingWords() {
+    clearInterval(_thinkInterval);
+    _thinkInterval = null;
+  }
+
   // ── Track config ──────────────────────────────────────────────────────────
 
   const TRACK_CONFIG = {
@@ -367,6 +405,7 @@ const App = (() => {
 
     document.getElementById('submitBtn').disabled = true;
     document.getElementById('loadingOverlay').classList.add('active');
+    _startThinkingWords();
     hideResults();
 
     try {
@@ -388,6 +427,7 @@ const App = (() => {
     } finally {
       document.getElementById('submitBtn').disabled = false;
       document.getElementById('loadingOverlay').classList.remove('active');
+      _stopThinkingWords();
     }
   }
 

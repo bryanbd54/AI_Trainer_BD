@@ -675,6 +675,37 @@ body {
 .loading-box h3 { font-size: 1rem; margin-bottom: 6px; color: var(--text); }
 .loading-box p { font-size: 0.85rem; color: var(--text-muted); }
 
+.thinking-word-wrap {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.thinking-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.thinking-word {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent2);
+  min-width: 120px;
+  text-align: left;
+  animation: thinkFade 2s ease infinite;
+}
+@keyframes thinkFade {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
 /* ── Results ── */
 .result-section {
   background: var(--surface);
