@@ -64,7 +64,7 @@ async def register_user(user: UserRegister):
     except Exception as e:
         if "unique" in str(e).lower() or "duplicate" in str(e).lower():
             raise HTTPException(409, "Username or email already taken")
-        raise HTTPException(500, "Could not create account")
+        raise HTTPException(500, f"Could not create account: {type(e).__name__}: {e}")
 
 
 @app.post("/api/users")
