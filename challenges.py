@@ -1252,14 +1252,12 @@ def get_level(xp: int) -> dict:
 
 
 def get_xp_reward(score: int, base_reward: int) -> int:
+    if score < 30:
+        return 0
     if score >= 90:
         multiplier = 1.5
     elif score >= 75:
         multiplier = 1.2
-    elif score >= 50:
-        multiplier = 1.0
-    elif score >= 30:
-        multiplier = 0.3
     else:
-        multiplier = 0.0
-    return round(base_reward * multiplier)
+        multiplier = 1.0
+    return round(base_reward * multiplier * score / 100)
