@@ -164,8 +164,10 @@ async def get_status():
 
 
 @app.get("/api/leaderboard")
-async def get_leaderboard():
-    return db.get_leaderboard(limit=15)
+async def get_leaderboard(track: str = "all"):
+    if track not in ("all", "claude", "copilot"):
+        track = "all"
+    return db.get_leaderboard(limit=15, track=track)
 
 
 @app.get("/api/users/{username}/history")

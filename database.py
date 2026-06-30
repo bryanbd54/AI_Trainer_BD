@@ -267,27 +267,59 @@ def check_and_award_badges(username: str) -> list[str]:
     return new_badges
 
 
-def get_leaderboard(limit: int = 15) -> list[dict]:
+def get_leaderboard(limit: int = 15, track: str = "all") -> list[dict]:
     from challenges import get_level
     conn = get_conn()
     try:
         with conn:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
-                cur.execute("""
-                    SELECT u.username, u.display_name, u.xp, u.level,
-                           COUNT(DISTINCT s.challenge_id) as challenges_completed,
-                           COALESCE(AVG(best.best_score), 0) as avg_score
-                    FROM users u
-                    LEFT JOIN (
-                        SELECT username, challenge_id, MAX(score) as best_score
-                        FROM submissions
-                        GROUP BY username, challenge_id
-                    ) best ON u.username = best.username
-                    LEFT JOIN submissions s ON u.username = s.username
-                    GROUP BY u.username, u.display_name, u.xp, u.level
-                    ORDER BY u.xp DESC
-                    LIMIT %s
-                """, (limit,))
+                if track in ("claude", "copilot"):
+                    # Filter by challenge prefix; rank by XP earned within the track
+                    if track == "copilot":
+                        track_cond = "challenge_id LIKE 'copilot_%'"
+                    else:
+                        track_cond = "challenge_id NOT LIKE 'copilot_%'"
+                    cur.execute(f"""
+                        SELECT u.username, u.display_name, u.xp, u.level,
+                               t.challenges_completed,
+                               t.avg_score,
+                               t.track_xp
+                        FROM users u
+                        INNER JOIN (
+                            SELECT username,
+                                   COUNT(DISTINCT challenge_id) AS challenges_completed,
+                                   AVG(best_score)              AS avg_score,
+                                   SUM(max_xp)                  AS track_xp
+                            FROM (
+                                SELECT username, challenge_id,
+                                       MAX(score)      AS best_score,
+                                       MAX(xp_earned)  AS max_xp
+                                FROM submissions
+                                WHERE {track_cond}
+                                GROUP BY username, challenge_id
+                            ) per_challenge
+                            GROUP BY username
+                        ) t ON u.username = t.username
+                        ORDER BY t.track_xp DESC, t.avg_score DESC
+                        LIMIT %s
+                    """, (limit,))
+                else:
+                    cur.execute("""
+                        SELECT u.username, u.display_name, u.xp, u.level,
+                               COUNT(DISTINCT s.challenge_id) as challenges_completed,
+                               COALESCE(AVG(best.best_score), 0) as avg_score,
+                               u.xp as track_xp
+                        FROM users u
+                        LEFT JOIN (
+                            SELECT username, challenge_id, MAX(score) as best_score
+                            FROM submissions
+                            GROUP BY username, challenge_id
+                        ) best ON u.username = best.username
+                        LEFT JOIN submissions s ON u.username = s.username
+                        GROUP BY u.username, u.display_name, u.xp, u.level
+                        ORDER BY u.xp DESC
+                        LIMIT %s
+                    """, (limit,))
                 rows = cur.fetchall()
     finally:
         conn.close()
@@ -300,11 +332,12 @@ def get_leaderboard(limit: int = 15) -> list[dict]:
             "username": r["username"],
             "display_name": r["display_name"] or r["username"],
             "xp": r["xp"],
+            "track_xp": int(r["track_xp"] or 0),
             "level": r["level"],
             "level_name": level_info["name"],
             "level_color": level_info["color"],
             "challenges_completed": r["challenges_completed"],
-            "avg_score": round(float(r["avg_score"]), 1),
+            "avg_score": round(float(r["avg_score"] or 0), 1),
         })
     return result
 

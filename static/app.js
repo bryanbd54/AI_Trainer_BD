@@ -438,9 +438,17 @@ const App = (() => {
   // ── Leaderboard ───────────────────────────────────────────────────────────
 
   async function renderLeaderboard() {
-    const data = await api('/api/leaderboard');
+    const track = state.currentTrack;
+    const data = await api('/api/leaderboard?track=' + track);
     const body = document.getElementById('lbBody');
     body.innerHTML = '';
+
+    const isTrack = track !== 'all';
+    const trackLabel = track === 'copilot' ? 'Copilot' : 'Claude';
+    document.getElementById('lbSubtitle').textContent =
+      `Top ${trackLabel} practitioners on your team`;
+    document.getElementById('lbXpHeader').textContent =
+      isTrack ? trackLabel + ' XP' : 'XP';
 
     if (!data.length) {
       body.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div><h3>No scores yet</h3><p>Be the first to complete a challenge!</p></div>';
@@ -457,6 +465,7 @@ const App = (() => {
 
       const initials = player.username.substring(0, 2).toUpperCase();
       const hue = hashColor(player.username);
+      const displayXp = isTrack ? player.track_xp : player.xp;
 
       row.innerHTML = `
         <div class="lb-rank ${rankClass}">${rankSymbol}</div>
@@ -467,7 +476,7 @@ const App = (() => {
             <div class="lb-level-name" style="color:${player.level_color}">${player.level_name}</div>
           </div>
         </div>
-        <div class="lb-xp">${player.xp.toLocaleString()}</div>
+        <div class="lb-xp">${displayXp.toLocaleString()}</div>
         <div class="lb-challenges" style="text-align:center">${player.challenges_completed}</div>
         <div class="lb-avg" style="color:${scoreColor(player.avg_score)}">${player.avg_score > 0 ? player.avg_score : '—'}</div>
       `;
