@@ -39,6 +39,10 @@ class SubmissionCreate(BaseModel):
 class PermissionsUpdate(BaseModel):
     claude_access: bool | None = None
     is_admin: bool | None = None
+    disabled: bool | None = None
+
+class PasswordUpdate(BaseModel):
+    new_password: str
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -80,6 +84,8 @@ async def login_user(user: UserCreate):
     result = db.authenticate_user(username, user.password)
     if not result:
         raise HTTPException(401, "Invalid username or password")
+    if result.get("disabled"):
+        raise HTTPException(403, "Your account has been disabled. Contact your admin.")
     return result
 
 
@@ -199,8 +205,37 @@ async def admin_update_permissions(username: str, perms: PermissionsUpdate, admi
     target = db.get_user(username.strip().lower())
     if not target:
         raise HTTPException(404, "User not found")
-    db.update_user_permissions(username.strip().lower(), perms.claude_access, perms.is_admin)
+    db.update_user_permissions(username.strip().lower(), perms.claude_access, perms.is_admin, perms.disabled)
     return db.get_user(username.strip().lower())
+
+
+@app.put("/api/admin/users/{username}/password")
+async def admin_update_password(username: str, body: PasswordUpdate, admin: str = Query(...)):
+    admin_user = db.get_user(admin.strip().lower())
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(403, "Admin access required")
+    if not db.get_user(username.strip().lower()):
+        raise HTTPException(404, "User not found")
+    if len(body.new_password) < 6:
+        raise HTTPException(400, "Password must be at least 6 characters")
+    if len(body.new_password) > 72:
+        raise HTTPException(400, "Password must be 72 characters or fewer")
+    db.update_user_password(username.strip().lower(), body.new_password)
+    return {"success": True}
+
+
+@app.delete("/api/admin/users/{username}")
+async def admin_delete_user(username: str, admin: str = Query(...)):
+    admin_user = db.get_user(admin.strip().lower())
+    if not admin_user or not admin_user.get("is_admin"):
+        raise HTTPException(403, "Admin access required")
+    if username.strip().lower() == admin.strip().lower():
+        raise HTTPException(400, "Cannot delete your own account")
+    target = db.get_user(username.strip().lower())
+    if not target:
+        raise HTTPException(404, "User not found")
+    db.delete_user(username.strip().lower())
+    return {"deleted": username}
 
 
 @app.get("/api/badges")

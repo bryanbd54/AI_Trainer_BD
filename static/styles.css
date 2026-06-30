@@ -143,8 +143,6 @@ body {
 }
 .track-btn:hover { color: var(--accent2); background: var(--surface2); }
 .track-btn.active { background: var(--gradient); color: #fff; }
-.track-btn.locked { opacity: 0.45; cursor: not-allowed; }
-.track-btn.locked::after { content: ' 🔒'; font-size: 0.7em; }
 
 .main { flex: 1; padding: 32px 24px; max-width: 1200px; margin: 0 auto; width: 100%; }
 
@@ -1030,7 +1028,7 @@ body {
 }
 .admin-row {
   display: grid;
-  grid-template-columns: 2fr 100px 140px 130px 110px;
+  grid-template-columns: 2fr 80px 120px 110px 110px 90px;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
@@ -1050,6 +1048,29 @@ body {
   padding: 10px 20px;
 }
 .admin-row-me { background: rgba(16,164,183,0.05); }
+.admin-row-disabled { opacity: 0.55; }
+.admin-actions-cell {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+.admin-action-btn {
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition);
+}
+.admin-pw-btn:hover { background: rgba(16,164,183,0.12); border-color: var(--accent); }
+.admin-delete-btn {
+  border-color: rgba(220,38,38,0.25);
+  background: rgba(220,38,38,0.06);
+  color: var(--red);
+}
+.admin-delete-btn:hover { background: rgba(220,38,38,0.14); }
 .admin-user-cell {
   display: flex;
   flex-direction: column;
@@ -1088,7 +1109,7 @@ body {
 .admin-toggle-off:hover { background: rgba(220,38,38,0.14); }
 
 @media (max-width: 700px) {
-  .admin-row { grid-template-columns: 1fr 80px 90px; }
-  .admin-row > div:nth-child(3),
-  .admin-row > div:nth-child(5) { display: none; }
+  .admin-row { grid-template-columns: 1fr 90px 90px 50px; }
+  .admin-row > div:nth-child(2),
+  .admin-row > div:nth-child(4) { display: none; }
 }

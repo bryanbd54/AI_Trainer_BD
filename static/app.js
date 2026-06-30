@@ -210,12 +210,11 @@ const App = (() => {
   function _applyTrackUI() {
     const cfg = TRACK_CONFIG[state.currentTrack];
     document.getElementById('navLogoText').textContent = cfg.logo;
-    const claudeHasAccess = !!state.user?.claude_access;
     const claudeBtn = document.getElementById('trackBtnClaude');
     if (claudeBtn) {
+      const hasAccess = !!state.user?.claude_access;
+      claudeBtn.style.display = hasAccess ? '' : 'none';
       claudeBtn.classList.toggle('active', state.currentTrack === 'claude');
-      claudeBtn.classList.toggle('locked', !claudeHasAccess);
-      claudeBtn.title = claudeHasAccess ? '' : 'Claude access required — contact your admin';
     }
     document.getElementById('trackBtnCopilot').classList.toggle('active', state.currentTrack === 'copilot');
     document.getElementById('loadingTitle').textContent = cfg.loadingTitle;
@@ -711,14 +710,13 @@ const App = (() => {
     for (const u of users) {
       const isMe = u.username === state.username;
       const row = document.createElement('div');
-      row.className = 'admin-row' + (isMe ? ' admin-row-me' : '');
+      row.className = 'admin-row' + (isMe ? ' admin-row-me' : '') + (u.disabled ? ' admin-row-disabled' : '');
       row.innerHTML = `
         <div class="admin-user-cell">
           <strong>${u.username}</strong>${isMe ? ' <span class="admin-you-tag">(you)</span>' : ''}
           <span class="admin-display-name">${u.display_name || ''}</span>
         </div>
         <div style="text-align:right;font-variant-numeric:tabular-nums">${(u.xp || 0).toLocaleString()}</div>
-        <div style="color:${u.level_color || 'var(--text-muted)'};font-size:0.82rem">${u.level_name || ''}</div>
         <div style="text-align:center">
           <button class="admin-toggle ${u.claude_access ? 'admin-toggle-on' : 'admin-toggle-off'}"
             onclick="App.togglePermission('${u.username}', 'claude_access', ${!u.claude_access})">
@@ -730,6 +728,16 @@ const App = (() => {
             onclick="App.togglePermission('${u.username}', 'is_admin', ${!u.is_admin})">
             ${u.is_admin ? 'Admin' : 'Operator'}
           </button>
+        </div>
+        <div style="text-align:center">
+          <button class="admin-toggle ${u.disabled ? 'admin-toggle-off' : 'admin-toggle-on'}"
+            onclick="App.togglePermission('${u.username}', 'disabled', ${!u.disabled})">
+            ${u.disabled ? 'Disabled' : 'Active'}
+          </button>
+        </div>
+        <div class="admin-actions-cell">
+          <button class="admin-action-btn admin-pw-btn" onclick="App.changeUserPassword('${u.username}')" title="Reset password">🔑</button>
+          ${isMe ? '' : `<button class="admin-action-btn admin-delete-btn" onclick="App.deleteUser('${u.username}')" title="Delete user">🗑</button>`}
         </div>
       `;
       body.appendChild(row);
@@ -746,6 +754,38 @@ const App = (() => {
       await loadAdminUsers();
     } catch (e) {
       alert('Error updating permissions: ' + e.message);
+    }
+  }
+
+  async function changeUserPassword(targetUsername) {
+    const newPassword = prompt(`Set new password for "${targetUsername}" (min 6 characters):`);
+    if (newPassword === null) return;
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+    try {
+      await api(
+        '/api/admin/users/' + encodeURIComponent(targetUsername) + '/password?admin=' + encodeURIComponent(state.username),
+        'PUT',
+        { new_password: newPassword }
+      );
+      alert('Password updated for ' + targetUsername + '.');
+    } catch (e) {
+      alert('Error: ' + e.message);
+    }
+  }
+
+  async function deleteUser(targetUsername) {
+    if (!confirm(`Permanently delete "${targetUsername}"? This removes all their submissions and badges and cannot be undone.`)) return;
+    try {
+      await api(
+        '/api/admin/users/' + encodeURIComponent(targetUsername) + '?admin=' + encodeURIComponent(state.username),
+        'DELETE'
+      );
+      await loadAdminUsers();
+    } catch (e) {
+      alert('Error deleting user: ' + e.message);
     }
   }
 
@@ -767,5 +807,7 @@ const App = (() => {
     togglePassword,
     filterAdminUsers,
     togglePermission,
+    changeUserPassword,
+    deleteUser,
   };
 })();

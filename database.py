@@ -112,6 +112,7 @@ def _build_user_dict(row: dict, badges, completions) -> dict:
         "last_active": str(row["last_active"]),
         "is_admin": bool(row.get("is_admin", False)),
         "claude_access": bool(row.get("claude_access", False)),
+        "disabled": bool(row.get("disabled", False)),
         "badges": [{"badge_id": b["badge_id"], "earned_at": str(b["earned_at"])} for b in badges],
         "completions": {c["challenge_id"]: c["best_score"] for c in completions},
     }
@@ -366,13 +367,39 @@ def get_all_users() -> list[dict]:
             "level_color": level_info["color"],
             "is_admin": bool(row.get("is_admin", False)),
             "claude_access": bool(row.get("claude_access", False)),
+            "disabled": bool(row.get("disabled", False)),
             "created_at": str(row["created_at"]),
             "last_active": str(row["last_active"]),
         })
     return result
 
 
-def update_user_permissions(username: str, claude_access: bool | None, is_admin: bool | None):
+def update_user_password(username: str, new_password: str):
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE users SET password_hash = %s WHERE username = %s",
+                    (hash_password(new_password), username)
+                )
+    finally:
+        conn.close()
+
+
+def delete_user(username: str):
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM user_badges WHERE username = %s", (username,))
+                cur.execute("DELETE FROM submissions WHERE username = %s", (username,))
+                cur.execute("DELETE FROM users WHERE username = %s", (username,))
+    finally:
+        conn.close()
+
+
+def update_user_permissions(username: str, claude_access: bool | None, is_admin: bool | None, disabled: bool | None = None):
     conn = get_conn()
     try:
         with conn:
@@ -386,6 +413,11 @@ def update_user_permissions(username: str, claude_access: bool | None, is_admin:
                     cur.execute(
                         "UPDATE users SET is_admin = %s WHERE username = %s",
                         (is_admin, username)
+                    )
+                if disabled is not None:
+                    cur.execute(
+                        "UPDATE users SET disabled = %s WHERE username = %s",
+                        (disabled, username)
                     )
     finally:
         conn.close()
