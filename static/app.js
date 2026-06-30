@@ -407,6 +407,29 @@ const App = (() => {
 
     showView('challenge');
     window.scrollTo(0, 0);
+
+    // Load previous attempt if user has completed this challenge before
+    if (state.user && state.user.completions && state.user.completions[id] !== undefined) {
+      try {
+        const history = await api(
+          '/api/users/' + encodeURIComponent(state.username) +
+          '/history?challenge_id=' + encodeURIComponent(id)
+        );
+        if (history && history.length > 0) {
+          const last = history[0];
+          const promptInput = document.getElementById('promptInput');
+          if (promptInput && last.prompt) {
+            promptInput.value = last.prompt;
+            updateCharCount();
+          }
+          if (last.result_json) {
+            try {
+              renderResults(JSON.parse(last.result_json), true);
+            } catch (_) {}
+          }
+        }
+      } catch (_) {}
+    }
   }
 
   function updateCharCount() {
@@ -478,7 +501,7 @@ const App = (() => {
     }
   }
 
-  function renderResults(result) {
+  function renderResults(result, isPrevious = false) {
     const score = result.score;
     const bd = result.score_breakdown || {};
     const cfg = TRACK_CONFIG[state.currentTrack];
@@ -507,8 +530,13 @@ const App = (() => {
     document.getElementById('responseContent').classList.remove('open');
     document.getElementById('toggleChevron').classList.remove('open');
 
+    const banner = document.getElementById('prevAttemptBanner');
+    if (banner) banner.style.display = isPrevious ? 'block' : 'none';
+
     document.getElementById('resultSection').classList.add('visible');
-    document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!isPrevious) {
+      document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
     // Switch to edit mode: hide Submit, show Resubmit, update section label
     const submitBtn = document.getElementById('submitBtn');
@@ -523,6 +551,8 @@ const App = (() => {
 
   function hideResults() {
     document.getElementById('resultSection').classList.remove('visible');
+    const banner = document.getElementById('prevAttemptBanner');
+    if (banner) banner.style.display = 'none';
     // Restore submit mode
     const submitBtn = document.getElementById('submitBtn');
     const retryBtn = document.getElementById('retryBtn');

@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     last_active   TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Migration: add result_json to submissions for previous attempt restore
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS result_json TEXT;
+
 -- Migration: add admin/permissions columns to existing databases
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin      BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS claude_access BOOLEAN NOT NULL DEFAULT FALSE;

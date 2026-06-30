@@ -133,16 +133,17 @@ def add_xp(username: str, xp: int):
 
 
 def add_submission(username: str, challenge_id: str, prompt: str,
-                   response: str, score: int, xp_earned: int, feedback: str) -> int:
+                   response: str, score: int, xp_earned: int, feedback: str,
+                   result_json: str | None = None) -> int:
     conn = get_conn()
     try:
         with conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    INSERT INTO submissions (username, challenge_id, prompt, response, score, xp_earned, feedback)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO submissions (username, challenge_id, prompt, response, score, xp_earned, feedback, result_json)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
-                """, (username, challenge_id, prompt, response, score, xp_earned, feedback))
+                """, (username, challenge_id, prompt, response, score, xp_earned, feedback, result_json))
                 return cur.fetchone()[0]
     finally:
         conn.close()
@@ -374,6 +375,21 @@ def get_all_users() -> list[dict]:
     return result
 
 
+def get_best_xp_for_challenge(username: str, challenge_id: str) -> int:
+    conn = get_conn()
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT COALESCE(MAX(xp_earned), 0)
+                    FROM submissions
+                    WHERE username = %s AND challenge_id = %s
+                """, (username, challenge_id))
+                return cur.fetchone()[0]
+    finally:
+        conn.close()
+
+
 def update_user_password(username: str, new_password: str):
     conn = get_conn()
     try:
@@ -442,3 +458,4 @@ def get_user_submissions(username: str, challenge_id: str | None = None) -> list
     finally:
         conn.close()
     return [dict(r) for r in rows]
+

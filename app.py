@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -137,11 +138,26 @@ async def submit_challenge(challenge_id: str, submission: SubmissionCreate):
     result = await evaluate_submission(challenge, submission.prompt)
     score = result["score"]
 
-    # Calculate XP (apply hint penalty: -8 XP per hint used)
+    # Calculate XP for this attempt (apply hint penalty: -8 XP per hint used)
     from challenges import get_xp_reward
     xp_earned = max(0, get_xp_reward(score, challenge["xp_reward"]) - submission.hints_used * 8)
 
-    # Save submission
+    # Only credit the improvement over the user's previous best for this challenge
+    prev_best_xp = db.get_best_xp_for_challenge(username, challenge_id)
+    xp_delta = max(0, xp_earned - prev_best_xp)
+
+    # Build storable result snapshot (excludes user/badges which are dynamic)
+    result_snapshot = {
+        "score": score,
+        "score_breakdown": result.get("score_breakdown", {}),
+        "feedback": result.get("feedback", ""),
+        "tip": result.get("tip", ""),
+        "model_comparison": result.get("model_comparison", ""),
+        "claude_response": result.get("claude_response", ""),
+        "xp_earned": xp_delta,
+    }
+
+    # Save submission — store gross xp_earned so leaderboard MAX() is accurate
     db.add_submission(
         username=username,
         challenge_id=challenge_id,
@@ -150,10 +166,11 @@ async def submit_challenge(challenge_id: str, submission: SubmissionCreate):
         score=score,
         xp_earned=xp_earned,
         feedback=result.get("feedback", ""),
+        result_json=json.dumps(result_snapshot),
     )
 
-    # Award XP and check badges
-    db.add_xp(username, xp_earned)
+    # Award only the delta (improvement over prior best)
+    db.add_xp(username, xp_delta)
     new_badges = db.check_and_award_badges(username)
 
     # Get updated user
@@ -161,7 +178,7 @@ async def submit_challenge(challenge_id: str, submission: SubmissionCreate):
 
     return {
         **result,
-        "xp_earned": xp_earned,
+        "xp_earned": xp_delta,
         "new_badges": [
             {**ALL_BADGES[b], "id": b} for b in new_badges if b in ALL_BADGES
         ],
