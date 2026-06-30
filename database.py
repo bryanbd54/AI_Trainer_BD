@@ -240,13 +240,13 @@ def check_and_award_badges(username: str) -> list[str]:
                     if cat_ids.issubset(copilot_completions.keys()):
                         maybe_award(badge_id)
 
-                if copilot_completions.get("copilot_ppt_framework_mastery", 0) >= 90:
+                if sum(1 for s in copilot_completions.values() if s >= 90) >= 3:
                     maybe_award("copilot_framework_expert")
 
                 if any(s >= 95 for s in copilot_completions.values()):
                     maybe_award("copilot_perfectionist")
 
-                if sum(1 for s in copilot_completions.values() if s >= 80) >= 5:
+                if sum(1 for s in copilot_completions.values() if s >= 80) >= 10:
                     maybe_award("copilot_high_achiever")
 
                 all_copilot_ids = {c["id"] for c in COPILOT_CHALLENGES}

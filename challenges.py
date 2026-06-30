@@ -122,14 +122,16 @@ CHALLENGES = [
         "difficulty": "intermediate",
         "xp_reward": 75,
         "scenario": (
-            "You have an epic: 'Build a customer-facing reporting dashboard.' "
-            "Sprint planning is tomorrow and your team needs individual, sprint-sized stories. "
-            "Use Claude to decompose this epic into a structured backlog of user stories."
+            "You have an epic: 'Build a compliance reporting dashboard for enterprise healthcare customers.' "
+            "Four enterprise deals — totaling $2.1M ARR — are blocked in procurement until customers "
+            "can run their own audit reports. Sales has committed a Q3 delivery date. "
+            "Sprint planning is tomorrow. Use Claude to decompose this epic into a structured backlog."
         ),
         "context": (
-            "The dashboard will show revenue metrics, user activity, and export reports to PDF/CSV. "
-            "Your team is 3 engineers and you work in 2-week sprints. "
-            "The MVP is needed in 6 weeks. Non-MVP features can be backlogged."
+            "The dashboard must let hospital compliance officers export HIPAA audit logs, user activity, "
+            "and access control reports to PDF/CSV. Your team is 3 engineers in 2-week sprints. "
+            "The MVP (audit log export only) is needed in 6 weeks to unblock the deals; "
+            "full reporting can follow in subsequent sprints. Non-MVP features must be clearly labeled."
         ),
         "what_makes_a_great_prompt": [
             "Put your constraints in <constraints> tags at the top of your prompt, before the task description — Anthropic research shows that for complex prompts, placing important context before instructions improves output quality because Claude reads it before deciding how to approach the task.",
@@ -175,9 +177,10 @@ CHALLENGES = [
         "difficulty": "intermediate",
         "xp_reward": 75,
         "scenario": (
-            "Your backlog has grown to 87 tickets, many are stale, vague, or duplicated. "
-            "The CEO is asking about Q3 priorities. Use Claude to analyze and "
-            "prioritize your backlog based on business value, effort, and strategic alignment."
+            "You're inheriting an 87-ticket backlog from a PM who left last week. "
+            "Q3 planning kicks off in 48 hours and the CEO is already asking what's on the roadmap. "
+            "Many tickets are stale, vague, or duplicated — and you've never seen most of them. "
+            "Use Claude to rapidly triage, prioritize, and clean up the backlog before planning starts."
         ),
         "context": (
             "Your product is a B2B HR platform. Company OKRs this quarter: increase enterprise "
@@ -212,10 +215,10 @@ CHALLENGES = [
         ),
         "evaluation_rubric": (
             "Score this backlog refinement prompt/output (0-25 each):\n"
-            "1. Framework: Is a clear prioritization framework applied consistently?\n"
-            "2. Strategic Alignment: Are items scored against the actual business objectives?\n"
-            "3. Decision Quality: Is the prioritization reasoning sound and defensible?\n"
-            "4. Actionability: Is the output ready to present to stakeholders or import to Jira?"
+            "1. Framework: Is a clear prioritization framework applied consistently with defined scoring criteria?\n"
+            "2. Strategic Alignment: Are items explicitly scored against the company OKRs, with items flagged that have no OKR alignment?\n"
+            "3. Backlog Health: Does the output identify stale, duplicate, or low-value tickets for closure — and propose triage rules for future grooming?\n"
+            "4. Actionability: Is the output ready to present to the CEO with a defensible executive summary?"
         ),
     },
 
@@ -573,9 +576,10 @@ CHALLENGES = [
         "difficulty": "beginner",
         "xp_reward": 50,
         "scenario": (
-            "It's end of Q2. Your CEO wants a one-page product update to share with the board. "
-            "You need to summarize what you shipped, key metrics, and Q3 priorities. "
-            "Use Claude to create a polished, board-ready quarterly update."
+            "It's end of Q2 and you've just been promoted to VP of Product — this is your first "
+            "board update. The board was skeptical of the previous roadmap and you need to establish "
+            "credibility fast. Your CEO wants a one-page product update by tomorrow morning. "
+            "Use Claude to create a polished, board-ready quarterly update that earns their trust."
         ),
         "context": (
             "Q2 highlights: shipped 3 major features (SSO, API v2, Advanced Reporting), "
@@ -584,11 +588,11 @@ CHALLENGES = [
             "One challenge: engineering headcount is 2 below plan."
         ),
         "what_makes_a_great_prompt": [
-            "Lead with the metrics in your prompt — 'Q2 metrics: MAU +23%, churn 4.2%→3.1%, Canada launched' — not the feature list. Boards respond to outcomes, not outputs. When you put metrics first in your prompt, Claude leads with them in the output too.",
-            "Tell Claude the board's primary concerns explicitly: 'This board cares about: revenue health (NRR, churn), product-market fit signals (MAU growth, engagement), and strategic execution against the roadmap. Frame everything through one of these three lenses.' Board updates without this framing often read as PM self-congratulation rather than investor-relevant information.",
-            "Use <wins> and <challenges> XML tags to feed Claude both sides: boards distrust updates with no challenges. 'Include one honest challenge (engineering headcount 2 below plan) and explain the mitigation — boards trust PMs who surface problems with plans, not those who omit them.'",
-            "Specify the format as a one-pager with visual hierarchy: 'Output a one-pager. Use ## headers, bold the key numbers, and write in bullet points for wins/priorities. Avoid paragraphs of narrative — board members scan, not read.' Format guidance makes a measurable difference on board materials.",
-            "Ask Claude to write a 'what we learned' sentence for Q2: 'After the wins section, include one sentence starting with \"Key learning:\" — boards respect PMs who reflect, not just report.' This is a small addition that meaningfully elevates the quality of the document.",
+            "Lead with outcomes, not outputs — tell Claude explicitly: 'Frame wins as business outcomes, NOT feature deliveries. NOT: \"We shipped SSO, API v2, and Advanced Reporting.\" YES: \"NRR grew to 112% and churn dropped to 3.1% — driven by SSO unblocking 6 enterprise deals and Advanced Reporting reducing support tickets 28%.\" Boards fund outcomes, not feature counts.'",
+            "Tell Claude the board's primary concerns explicitly: 'This board cares about: revenue health (NRR, churn), product-market fit signals (MAU growth), and strategic execution. Frame every bullet through one of these three lenses — if a point doesn't connect to one of these, cut it.' Without this filter, Claude writes for a general audience, not an investor audience.",
+            "Use <wins> and <challenges> XML tags to feed Claude both sides: 'Include one honest challenge (engineering headcount 2 below plan) with a concrete mitigation — boards distrust updates with no challenges, and a new VP with no challenges looks naive. NOT: vague acknowledgment. YES: specific problem + specific plan to fix it.'",
+            "Specify the format as a one-pager with scanning hierarchy: 'Output a one-pager. ## headers, bold the key numbers, bullet points for wins and priorities. NO narrative paragraphs — board members spend 90 seconds on this document. Every sentence must survive the scan test: does it land in 3 seconds?'",
+            "Ask Claude to write a 'Key Learning' sentence: 'After the wins section, add one sentence starting with \"Key learning:\" — something non-obvious the team discovered this quarter. This is the highest-credibility signal in the document; it tells the board you reflect, not just execute.'",
         ],
         "model_prompt": (
             "You are a VP of Product preparing a quarterly update for the board of directors.\n\n"
@@ -616,10 +620,10 @@ CHALLENGES = [
         ),
         "evaluation_rubric": (
             "Score this quarterly update prompt/output (0-25 each):\n"
-            "1. Metrics: Are concrete numbers used to tell the story (not just narrative)?\n"
-            "2. Strategic Framing: Is it positioned at board/strategic level, not operational?\n"
-            "3. Completeness: Does it cover wins, challenges, and forward-looking priorities?\n"
-            "4. Conciseness: Would a board member get the full picture in under 3 minutes?"
+            "1. Outcome Framing: Are wins expressed as business outcomes (NRR, churn, revenue impact) rather than features shipped?\n"
+            "2. Board Relevance: Is everything framed through investor-relevant lenses (revenue health, product-market fit, strategic execution) — or does it read like a PM status report?\n"
+            "3. Completeness: Does it cover wins, one honest challenge with mitigation, and forward-looking priorities with strategic rationale?\n"
+            "4. Scannability: Could a board member extract the full picture in 90 seconds — bold numbers, bullet points, no narrative paragraphs?"
         ),
     },
     {
@@ -1105,9 +1109,11 @@ CHALLENGES = [
         "difficulty": "intermediate",
         "xp_reward": 75,
         "scenario": (
-            "Mid-sprint, the CEO wants to add a feature: 'Can we also send the user an "
-            "automated SMS when their subscription renews?' This is a scope change that "
-            "will impact the current sprint. Use Claude to write a proper Change Request document."
+            "Mid-sprint, the CEO wants to add a feature: 'Can we also send each customer an "
+            "automated SMS when their subscription auto-renews? I think it could reduce churn — "
+            "we're seeing 2% day-1 cancellations from people surprised by the charge.' "
+            "This is a scope change that will impact the current sprint. "
+            "Use Claude to write a proper Change Request document."
         ),
         "context": (
             "Current sprint has 3 days left. The SMS feature requires: Twilio integration, "
@@ -1119,7 +1125,7 @@ CHALLENGES = [
         "what_makes_a_great_prompt": [
             "Lead with impact, not the request — tell Claude to structure the document this way: 'Open with the sprint impact, not the change description. The reader already knows what was requested. What they need to understand immediately is what accepting it costs: 3 days left + 5-7 days of work = sprint goal at risk.' Impact-first framing produces faster decisions.",
             "Ask Claude to write three options with an explicit recommendation, not a balanced hedge: 'Present exactly 3 options (accept now / defer to next sprint / MVP-scoped version). For each, write: Time | Cost | Sprint Goal Impact | Recommendation (yes/no). End with a single recommended option. Do NOT write \"both options have merit\" — that's not a recommendation, it's a refusal to decide.'",
-            "Give Claude the professional tone constraint explicitly: 'The CEO requested this. The document must be respectful and acknowledge the business value of the request — but must also be honest about the impact. Use language like \"to deliver this with quality\" not \"this is impossible.\" The goal is a decision, not a refusal.'",
+            "Give Claude an explicit tone contrast, not just a vague instruction: 'The CEO requested this — the document must be respectful and acknowledge the business case. NOT: \"This is impossible\" (sounds like refusal). NOT: \"We can try\" (sounds like a yes when it isn't). YES: \"To deliver this with the quality it deserves, we need 5-7 days — here are your three options.\" The goal is a crisp decision, not a refusal or a hedge.'",
             "Ask for the change to be documented against the original scope: 'Include a section called \"Original Sprint Scope\" listing the committed stories and their status. This contextualizes why adding work mid-sprint is impactful — without this context, the CEO may not realize what they're asking the team to trade off.'",
             "Specify the decision needed as a single yes/no question with a deadline: 'End with a highlighted \"Decision Needed\" box: one yes/no question, the name of the decision maker, and a deadline (e.g., today by 3pm — after which the team continues with the original scope by default).' A default outcome prevents decisions from stalling.",
         ],

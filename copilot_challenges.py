@@ -399,22 +399,24 @@ COPILOT_CHALLENGES = [
         ],
         "model_prompt": (
             "Goal: Draft a Teams channel message to the engineering team announcing that the "
-            "reporting export feature is cut from Q4 scope.\n\n"
+            "reporting export feature is cut from Q4 scope — delivering difficult news while "
+            "preserving team morale and trust.\n\n"
             "Context:\n"
             "- The feature is functionally complete — this is a scope management decision, not "
             "a quality concern\n"
-            "- Decision made by leadership; the team was not involved\n"
-            "- Feature is committed for Q1 — this is a real commitment, not 'maybe'\n"
-            "- Three engineers worked on this for 3 weeks\n"
-            "- The team will be surprised and potentially demoralized\n\n"
-            "The message must:\n"
-            "1. Acknowledge the team's work specifically (not generic 'great job everyone')\n"
-            "2. State the business reason clearly (scope and focus, not their quality)\n"
-            "3. Confirm the Q1 commitment as firm\n"
-            "4. End with a specific next step (when will we discuss Q1 prioritization?)\n\n"
+            "- Decision made by leadership; the 3 engineers who built it were not involved\n"
+            "- Feature is committed for Q1 — a real commitment, not 'maybe'\n"
+            "- The team is proud of this work and will be surprised; poorly handled, this message "
+            "could demoralize them\n\n"
+            "Source (facts the message must include):\n"
+            "- 3 engineers worked on this for 3 weeks\n"
+            "- Reason for cut: Q4 focus is stabilization, not feature expansion\n"
+            "- Q1 commitment is firm: it ships first in Q1\n"
+            "- Next step: team discussion on Q1 prioritization (schedule within 48 hours)\n\n"
             "Expectations: Teams channel message, under 150 words. Direct and respectful — "
-            "not cold, not apologetic. No passive voice. No hedge phrases like 'unfortunately' "
-            "or 'I know this is disappointing.'"
+            "NOT cold or top-down, NOT apologetic or full of hedge phrases. "
+            "No passive voice. No phrases like 'unfortunately' or 'I know this is disappointing' "
+            "— be direct. Acknowledge the specific work (3 weeks, 3 engineers), not generic praise."
         ),
         "evaluation_rubric": (
             "Score this Copilot prompt using Microsoft's 4-part framework (0-25 each):\n"
@@ -737,7 +739,7 @@ COPILOT_CHALLENGES = [
             "Ask Copilot to detect anomalies: 'Are there any months where a metric changed by more than 20% vs. the prior month? Flag them: Product Line | Month | Metric | Change.' Anomaly detection is one of Copilot's highest-value Excel capabilities — it finds the signal that manual scrolling would take 30 minutes to spot.",
             "Ask for a derived metric that requires combining columns: 'Calculate Revenue per Support Ticket for each product line and rank them. Highest = most efficient.' This kind of cross-column analysis that Copilot generates instantly would require manual PivotTables and formulas otherwise.",
             "Ask for the board narrative explicitly: 'Write 3 board-ready insight bullets in format: [What's happening] + [which product lines] + [board-level implication]. Write at VP-presenting-to-investors level, not analyst level.' The narrative framing produces board-quality language from raw data — not a data dump.",
-            "Ask Copilot to build the visualization: 'What chart type would best show NPS vs. Churn Rate across the 4 product lines over 6 months? Create that chart.' Let Copilot propose and build the visualization — it often makes better choices than the default Insert Chart wizard.",
+            "Ask Copilot to recommend the visualization: 'What chart type would best show NPS vs. Churn Rate across the 4 product lines over 6 months? Explain why, then walk me through building it.' Copilot can't create charts autonomously — but it makes better chart-type choices than the default Insert Chart wizard, and its step-by-step guidance is faster than experimenting yourself.",
         ],
         "model_prompt": (
             "Goal: Extract 3 board-ready insights from Q3 product metrics for a board presentation "
@@ -759,8 +761,8 @@ COPILOT_CHALLENGES = [
             "5. Board narrative: write 3 bullet points in format: "
             "[What's happening] + [which product lines] + [board-level implication]. "
             "No analyst language — write as a VP presenting to investors.\n\n"
-            "Also: create a chart showing NPS and Churn Rate trends for all 4 product lines "
-            "over 6 months."
+            "Also: recommend the best chart type to show NPS and Churn Rate trends for all 4 product lines "
+            "over 6 months, and walk me through building it step by step."
         ),
         "evaluation_rubric": (
             "Score this Copilot prompt using Microsoft's 4-part framework (0-25 each):\n"
@@ -841,11 +843,12 @@ COPILOT_CHALLENGES = [
             "the analysis that makes the case."
         ),
         "context": (
-            "You need to distinguish product areas with high demand from high-revenue customers "
-            "vs. areas with many requests from small customers. Some product areas have dozens of "
-            "requests from SMBs (breadth without value); others have few requests but from "
-            "enterprise accounts worth $1M+/year (value without breadth). The decision will "
-            "allocate 3 engineering teams for the quarter."
+            "The dataset is already in Excel as a formatted table named 'FeatureRequests' — "
+            "no import needed. You need to distinguish product areas with high demand from "
+            "high-revenue customers vs. areas with many requests from small customers. "
+            "Some product areas have dozens of requests from SMBs (breadth without value); "
+            "others have few requests but from enterprise accounts worth $1M+/year (value without breadth). "
+            "The decision will allocate 3 engineering teams for the quarter."
         ),
         "what_makes_a_great_prompt": [
             "State the business question you're answering, not the Excel operation you want: 'I need to know which product areas have the most demand from our highest-revenue customers.' This framing lets Copilot choose the right analysis structure — it produces better results than asking for a specific pivot configuration.",
@@ -907,7 +910,7 @@ COPILOT_CHALLENGES = [
             "engineering, design, sales, and support."
         ),
         "what_makes_a_great_prompt": [
-            "Use 'Create a presentation from file' and reference the PRD using /[filename] — not a text description. This grounds the deck in your actual content rather than Copilot's invention. Type 'Create a presentation based on /[Search_PRD.docx]' — the file must be saved in OneDrive or SharePoint.",
+            "Use 'Create a presentation from file' and reference the PRD using /[filename] — not a text description. This grounds the deck in your actual content rather than Copilot's invention. Type 'Create a presentation based on /[Search_PRD.docx]'. ⚠️ Prerequisite: the file must be saved in OneDrive or SharePoint BEFORE you type the prompt — if it's only on your local drive, the /[filename] Source element won't work and Copilot will generate from scratch instead.",
             "Specify the slide count explicitly: 'Create a maximum of 10 slides.' Without this constraint, Copilot generates too many slides — 18 slides for a 10-minute talk doesn't work for any audience. The constraint forces prioritization of what matters most.",
             "Tell Copilot the narrative arc you want, not the PRD section structure: 'Arc: Problem → Business Impact → Solution → Success Metrics → Timeline → What We Need. Do NOT follow the PRD sections — use this story structure.' PRD structure (requirements, non-goals, technical constraints) produces a spec, not a presentation.",
             "Ask for speaker notes on every slide: 'Add speaker notes to every slide with 2-3 sentences of context that don't fit on the slide itself.' Speaker notes are the most overlooked PowerPoint Copilot feature — they're where the real presentation lives, and they save you from reading your own slides.",
@@ -1130,7 +1133,7 @@ COPILOT_BADGES = {
     },
     "copilot_outlook_master": {
         "id": "copilot_outlook_master",
-        "name": "Inbox Zero Hero",
+        "name": "Outlook Master",
         "description": "Completed all Outlook Copilot challenges",
         "icon": "📧",
     },
@@ -1161,7 +1164,7 @@ COPILOT_BADGES = {
     "copilot_framework_expert": {
         "id": "copilot_framework_expert",
         "name": "Framework Expert",
-        "description": "Scored 90+ on the 4-Part Framework Mastery challenge",
+        "description": "Scored 90+ on 3 or more Copilot challenges",
         "icon": "🧠",
     },
     "copilot_perfectionist": {
@@ -1173,13 +1176,13 @@ COPILOT_BADGES = {
     "copilot_high_achiever": {
         "id": "copilot_high_achiever",
         "name": "Copilot High Achiever",
-        "description": "Scored 80+ on 5 different Copilot challenges",
+        "description": "Scored 80+ on 10 different Copilot challenges",
         "icon": "⭐",
     },
     "copilot_completionist": {
         "id": "copilot_completionist",
         "name": "Copilot Champion",
-        "description": "Completed all 20 Copilot challenges",
+        "description": "Completed all 18 Copilot challenges",
         "icon": "🏆",
     },
 }
