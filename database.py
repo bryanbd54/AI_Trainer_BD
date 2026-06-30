@@ -276,9 +276,9 @@ def get_leaderboard(limit: int = 15, track: str = "all") -> list[dict]:
                 if track in ("claude", "copilot"):
                     # Filter by challenge prefix; rank by XP earned within the track
                     if track == "copilot":
-                        track_cond = "challenge_id LIKE 'copilot_%'"
+                        track_cond = "challenge_id LIKE 'copilot_%%'"
                     else:
-                        track_cond = "challenge_id NOT LIKE 'copilot_%'"
+                        track_cond = "challenge_id NOT LIKE 'copilot_%%'"
                     cur.execute(f"""
                         SELECT u.username, u.display_name, u.xp, u.level,
                                t.challenges_completed,
