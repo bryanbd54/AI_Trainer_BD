@@ -160,7 +160,7 @@ const App = (() => {
 
   function _applyTrackUI() {
     const cfg = TRACK_CONFIG[state.currentTrack];
-    document.getElementById('navLogo').textContent = cfg.logo;
+    document.getElementById('navLogoText').textContent = cfg.logo;
     document.getElementById('trackBtnClaude').classList.toggle('active', state.currentTrack === 'claude');
     document.getElementById('trackBtnCopilot').classList.toggle('active', state.currentTrack === 'copilot');
     document.getElementById('loadingTitle').textContent = cfg.loadingTitle;
