@@ -214,6 +214,17 @@ body {
 .field-group input:focus { border-color: var(--accent); }
 .field-group input::placeholder { color: var(--text-muted); }
 .btn-full { width: 100%; }
+.form-error {
+  display: none;
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.4);
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 8px;
+  text-align: center;
+}
 
 /* ── Buttons ── */
 .btn {

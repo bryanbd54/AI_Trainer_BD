@@ -54,6 +54,7 @@
             <input type="password" id="passwordInput" placeholder="Password"
               onkeydown="if(event.key==='Enter')App.login()" />
           </div>
+          <div class="form-error" id="loginError"></div>
           <button class="btn btn-primary btn-full" onclick="App.login()">Sign In</button>
           <button class="btn btn-ghost btn-full" onclick="App.showView('register')">Create Account</button>
         </div>
@@ -71,9 +72,11 @@
             <input type="text" id="regDisplayName" placeholder="Display Name" maxlength="30" />
             <input type="text" id="regUsername" placeholder="Username" maxlength="30" />
             <input type="email" id="regEmail" placeholder="Email" />
-            <input type="password" id="regPassword" placeholder="Password (6–72 characters)" maxlength="72"
+            <input type="password" id="regPassword" placeholder="Password (6–72 characters)" minlength="6" maxlength="72" />
+            <input type="password" id="regPasswordConfirm" placeholder="Confirm Password" maxlength="72"
               onkeydown="if(event.key==='Enter')App.register()" />
           </div>
+          <div class="form-error" id="registerError"></div>
           <button class="btn btn-primary btn-full" onclick="App.register()">Create Account</button>
           <button class="btn btn-ghost btn-full" onclick="App.showView('login')">← Back to Sign In</button>
         </div>

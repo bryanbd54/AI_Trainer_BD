@@ -4,7 +4,7 @@ import psycopg2.extras
 from passlib.context import CryptContext
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_conn():
@@ -15,12 +15,18 @@ def init_db():
     pass  # schema lives in Railway — see postgres railway.session.sql
 
 
+def _safe_password(password: str) -> str:
+    """Truncate to 72 bytes — bcrypt 5.x hard limit."""
+    encoded = password.encode("utf-8")
+    return encoded[:72].decode("utf-8", errors="ignore")
+
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(_safe_password(password))
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return pwd_context.verify(_safe_password(plain), hashed)
 
 
 def create_user(username: str, email: str, password: str, display_name: str | None = None) -> dict:

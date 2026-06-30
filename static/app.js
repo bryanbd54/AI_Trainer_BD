@@ -68,6 +68,7 @@ const App = (() => {
   }
 
   async function login() {
+    showFormError('loginError', '');
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('passwordInput').value;
     if (!username) { document.getElementById('usernameInput').focus(); return; }
@@ -82,29 +83,53 @@ const App = (() => {
       renderDashboard();
       showView('dashboard');
     } catch (e) {
-      alert('Sign in failed: ' + e.message);
+      showFormError('loginError', e.message);
     }
   }
 
   async function register() {
+    showFormError('registerError', '');
     const displayName = document.getElementById('regDisplayName').value.trim();
     const username = document.getElementById('regUsername').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regPasswordConfirm').value;
+
     if (!username) { document.getElementById('regUsername').focus(); return; }
-    if (!email) { document.getElementById('regEmail').focus(); return; }
-    if (!password) { document.getElementById('regPassword').focus(); return; }
+    if (!email || !email.includes('@')) {
+      showFormError('registerError', 'Please enter a valid email address.');
+      document.getElementById('regEmail').focus();
+      return;
+    }
+    if (password.length < 6) {
+      showFormError('registerError', 'Password must be at least 6 characters.');
+      document.getElementById('regPassword').focus();
+      return;
+    }
+    if (password !== confirm) {
+      showFormError('registerError', 'Passwords do not match.');
+      document.getElementById('regPasswordConfirm').focus();
+      return;
+    }
+
     try {
       await api('/api/register', 'POST', { username, email, password, display_name: displayName || username });
       document.getElementById('regDisplayName').value = '';
       document.getElementById('regUsername').value = '';
       document.getElementById('regEmail').value = '';
       document.getElementById('regPassword').value = '';
-      document.getElementById('usernameInput').value = username;
-      showView('login');
-      document.getElementById('passwordInput').focus();
+      document.getElementById('regPasswordConfirm').value = '';
+      // Auto-login after successful registration
+      const user = await api('/api/users', 'POST', { username, password });
+      state.username = username;
+      state.user = user;
+      localStorage.setItem('ct_username', username);
+      await loadChallenges();
+      showNav();
+      renderDashboard();
+      showView('dashboard');
     } catch (e) {
-      alert('Registration failed: ' + e.message);
+      showFormError('registerError', e.message);
     }
   }
 
@@ -178,6 +203,9 @@ const App = (() => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     const el = document.getElementById('view-' + name);
     if (el) el.classList.add('active');
+
+    showFormError('loginError', '');
+    showFormError('registerError', '');
 
     if (name === 'dashboard') renderDashboard();
     else if (name === 'leaderboard') renderLeaderboard();
@@ -540,9 +568,19 @@ const App = (() => {
     const res = await fetch(path, opts);
     if (!res.ok) {
       const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(err.detail || 'Request failed');
+      const msg = Array.isArray(err.detail)
+        ? err.detail.map(e => e.msg).join(', ')
+        : (err.detail || 'Request failed');
+      throw new Error(msg);
     }
     return res.json();
+  }
+
+  function showFormError(id, msg) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
   }
 
   // ── Public API ────────────────────────────────────────────────────────────

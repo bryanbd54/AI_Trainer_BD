@@ -48,8 +48,11 @@ async def root():
 async def register_user(user: UserRegister):
     username = user.username.strip()
     email = user.email.strip().lower()
+    display_name = (user.display_name or "").strip()
     if not username or len(username) > 30:
         raise HTTPException(400, "Username must be 1-30 characters")
+    if display_name and len(display_name) > 30:
+        raise HTTPException(400, "Display name must be 30 characters or fewer")
     if not email or "@" not in email:
         raise HTTPException(400, "Valid email required")
     if not user.password or len(user.password) < 6:
@@ -57,11 +60,11 @@ async def register_user(user: UserRegister):
     if len(user.password) > 72:
         raise HTTPException(400, "Password must be 72 characters or fewer")
     try:
-        return db.create_user(username, email, user.password, user.display_name)
+        return db.create_user(username, email, user.password, display_name or None)
     except Exception as e:
         if "unique" in str(e).lower() or "duplicate" in str(e).lower():
             raise HTTPException(409, "Username or email already taken")
-        raise HTTPException(500, f"{type(e).__name__}: {e}")
+        raise HTTPException(500, "Could not create account")
 
 
 @app.post("/api/users")
