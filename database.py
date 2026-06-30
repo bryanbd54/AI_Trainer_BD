@@ -1,10 +1,9 @@
 import os
+import bcrypt
 import psycopg2
 import psycopg2.extras
-from passlib.context import CryptContext
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def get_conn():
@@ -16,11 +15,13 @@ def init_db():
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password.encode("utf-8")[:72])
+    pw_bytes = password.encode("utf-8")[:72]
+    return bcrypt.hashpw(pw_bytes, bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain.encode("utf-8")[:72], hashed)
+    pw_bytes = plain.encode("utf-8")[:72]
+    return bcrypt.checkpw(pw_bytes, hashed.encode("utf-8"))
 
 
 def create_user(username: str, email: str, password: str, display_name: str | None = None) -> dict:
