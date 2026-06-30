@@ -374,12 +374,12 @@ const App = (() => {
     document.getElementById('detailScenario').textContent = challenge.scenario;
     document.getElementById('detailContext').textContent = challenge.context || '';
 
-    document.getElementById('hintsList').innerHTML = '';
-    document.getElementById('hintsNote').style.display = 'none';
-    document.getElementById('hintsNote').textContent = '';
+    const hintsList = document.getElementById('hintsList');
+    const hintsNote = document.getElementById('hintsNote');
     const hintBtn = document.getElementById('hintBtn');
-    hintBtn.style.display = '';
-    hintBtn.disabled = false;
+    if (hintsList) hintsList.innerHTML = '';
+    if (hintsNote) { hintsNote.style.display = 'none'; hintsNote.textContent = ''; }
+    if (hintBtn) { hintBtn.style.display = ''; hintBtn.disabled = false; }
 
     document.getElementById('promptInput').value = '';
     document.getElementById('charCount').textContent = '0 characters';
@@ -401,19 +401,25 @@ const App = (() => {
     const tips = state.challengeTips;
     if (state.hintsUsed >= tips.length) return;
 
+    const hintsList = document.getElementById('hintsList');
+    const note = document.getElementById('hintsNote');
+    const hintBtn = document.getElementById('hintBtn');
+    if (!hintsList) return;
+
     const li = document.createElement('li');
     li.textContent = tips[state.hintsUsed];
-    document.getElementById('hintsList').appendChild(li);
+    hintsList.appendChild(li);
     state.hintsUsed++;
 
     const penalty = state.hintsUsed * 8;
-    const note = document.getElementById('hintsNote');
-    note.style.display = 'block';
-    note.textContent = state.hintsUsed + ' hint' + (state.hintsUsed > 1 ? 's' : '') +
-      ' used — max XP reduced by ' + penalty;
+    if (note) {
+      note.style.display = 'block';
+      note.textContent = state.hintsUsed + ' hint' + (state.hintsUsed > 1 ? 's' : '') +
+        ' used — max XP reduced by ' + penalty;
+    }
 
-    if (state.hintsUsed >= tips.length) {
-      document.getElementById('hintBtn').style.display = 'none';
+    if (state.hintsUsed >= tips.length && hintBtn) {
+      hintBtn.style.display = 'none';
     }
   }
 
