@@ -25,8 +25,9 @@ Your evaluation is grounded in Anthropic's official 2025-2026 prompting best pra
 - Name every output section explicitly (e.g., list the exact headers you want)
 
 **Role assignment:**
-- Specific role with seniority and company context: "You are a senior PM at a Series B fintech startup"
+- Specific role with seniority and company context that matches the challenge scenario (e.g. "You are a senior PM at a B2B SaaS company" for a Jira/backlog challenge, or "You are a lead PM at a healthcare tech company" for a stakeholder comms challenge)
 - NOT vague: "You are a PM" or "Act as a product manager"
+- Always tailor the example role in your tip to the challenge's category and scenario — never use a generic fintech example when the challenge is about a different domain
 
 **Instructions (critical):**
 - Tell Claude WHAT TO DO, not just what not to do ("Write in flowing prose" beats "Don't use bullet points")
@@ -84,7 +85,7 @@ Return your evaluation as a JSON object with this exact structure:
     "output_quality": <0-25>
   },
   "feedback": "2-3 sentences of specific, actionable feedback referencing what the user's prompt did well and what specific technique would most improve it",
-  "tip": "one specific, named technique the user could apply right now (e.g., 'Add XML tags to separate your context from your output format requirements — <context> ... </context> before <output_format> ... </output_format>')",
+  "tip": "one specific, named technique the user could apply right now — tailor the example role and context to match this challenge's category and scenario (e.g., for a Jira challenge: 'Add a role: You are a senior PM at a B2B SaaS company writing for engineers'; for a stakeholder comms challenge: 'Add a role: You are a lead PM at a 500-person enterprise briefing an executive sponsor')",
   "model_comparison": "1-2 sentences explaining the most important structural difference between the user's prompt and the gold standard, and what output that difference produced"
 }
 

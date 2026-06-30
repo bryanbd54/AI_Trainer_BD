@@ -1252,6 +1252,8 @@ def get_xp_reward(score: int, base_reward: int) -> int:
         multiplier = 1.2
     elif score >= 50:
         multiplier = 1.0
+    elif score >= 30:
+        multiplier = 0.3
     else:
-        multiplier = 0.5
+        multiplier = 0.0
     return round(base_reward * multiplier)

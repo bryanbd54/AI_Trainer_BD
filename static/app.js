@@ -69,7 +69,7 @@ const App = (() => {
 
   async function login() {
     showFormError('loginError', '');
-    const username = document.getElementById('usernameInput').value.trim();
+    const username = document.getElementById('usernameInput').value.trim().toLowerCase();
     const password = document.getElementById('passwordInput').value;
     if (!username) { document.getElementById('usernameInput').focus(); return; }
     if (!password) { document.getElementById('passwordInput').focus(); return; }
@@ -90,7 +90,7 @@ const App = (() => {
   async function register() {
     showFormError('registerError', '');
     const displayName = document.getElementById('regDisplayName').value.trim();
-    const username = document.getElementById('regUsername').value.trim();
+    const username = document.getElementById('regUsername').value.trim().toLowerCase();
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirm = document.getElementById('regPasswordConfirm').value;
@@ -583,6 +583,15 @@ const App = (() => {
     el.style.display = msg ? 'block' : 'none';
   }
 
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    btn.textContent = showing ? '👁' : '🙈';
+    btn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  }
+
   // ── Public API ────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', init);
@@ -598,5 +607,6 @@ const App = (() => {
     updateCharCount,
     toggleResponse,
     switchTrack,
+    togglePassword,
   };
 })();

@@ -51,8 +51,11 @@
           <div class="field-group">
             <input type="text" id="usernameInput" placeholder="Username" maxlength="30"
               onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
-            <input type="password" id="passwordInput" placeholder="Password"
-              onkeydown="if(event.key==='Enter')App.login()" />
+            <div class="pw-wrap">
+              <input type="password" id="passwordInput" placeholder="Password"
+                onkeydown="if(event.key==='Enter')App.login()" />
+              <button type="button" class="pw-toggle" onclick="App.togglePassword('passwordInput', this)" tabindex="-1" aria-label="Show password">👁</button>
+            </div>
           </div>
           <div class="form-error" id="loginError"></div>
           <button class="btn btn-primary btn-full" onclick="App.login()">Sign In</button>
@@ -72,9 +75,15 @@
             <input type="text" id="regDisplayName" placeholder="Display Name" maxlength="30" />
             <input type="text" id="regUsername" placeholder="Username" maxlength="30" />
             <input type="email" id="regEmail" placeholder="Email" />
-            <input type="password" id="regPassword" placeholder="Password (6–72 characters)" minlength="6" maxlength="72" />
-            <input type="password" id="regPasswordConfirm" placeholder="Confirm Password" maxlength="72"
-              onkeydown="if(event.key==='Enter')App.register()" />
+            <div class="pw-wrap">
+              <input type="password" id="regPassword" placeholder="Password (6–72 characters)" minlength="6" maxlength="72" />
+              <button type="button" class="pw-toggle" onclick="App.togglePassword('regPassword', this)" tabindex="-1" aria-label="Show password">👁</button>
+            </div>
+            <div class="pw-wrap">
+              <input type="password" id="regPasswordConfirm" placeholder="Confirm Password" maxlength="72"
+                onkeydown="if(event.key==='Enter')App.register()" />
+              <button type="button" class="pw-toggle" onclick="App.togglePassword('regPasswordConfirm', this)" tabindex="-1" aria-label="Show password">👁</button>
+            </div>
           </div>
           <div class="form-error" id="registerError"></div>
           <button class="btn btn-primary btn-full" onclick="App.register()">Create Account</button>

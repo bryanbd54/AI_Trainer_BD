@@ -46,7 +46,7 @@ async def root():
 
 @app.post("/api/register", status_code=201)
 async def register_user(user: UserRegister):
-    username = user.username.strip()
+    username = user.username.strip().lower()
     email = user.email.strip().lower()
     display_name = (user.display_name or "").strip()
     if not username or len(username) > 30:
@@ -69,7 +69,7 @@ async def register_user(user: UserRegister):
 
 @app.post("/api/users")
 async def login_user(user: UserCreate):
-    username = user.username.strip()
+    username = user.username.strip().lower()
     if not username:
         raise HTTPException(400, "Username required")
     result = db.authenticate_user(username, user.password)
@@ -80,7 +80,7 @@ async def login_user(user: UserCreate):
 
 @app.get("/api/users/{username}")
 async def get_user(username: str):
-    user = db.get_user(username)
+    user = db.get_user(username.strip().lower())
     if not user:
         raise HTTPException(404, "User not found")
     return user
